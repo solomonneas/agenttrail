@@ -16,6 +16,7 @@ import (
 	"github.com/openclaw/agenttrail/internal/sources"
 	"github.com/openclaw/agenttrail/internal/sources/claude"
 	"github.com/openclaw/agenttrail/internal/sources/codex"
+	"github.com/openclaw/agenttrail/internal/sources/hermes"
 	"github.com/openclaw/agenttrail/internal/sources/openclaw"
 	"github.com/openclaw/agenttrail/internal/sources/opencode"
 )
@@ -53,6 +54,12 @@ var commands = map[string]commandDef{
 		description: "export sanitized OpenCode session export JSON",
 		defaultRoot: func() string { return "" },
 		generator:   opencode.Generate,
+	},
+	"hermes": {
+		name:        "hermes",
+		description: "export Hermes session snapshots and trajectories",
+		defaultRoot: func() string { return homePath(".hermes", "sessions") },
+		generator:   hermes.Generate,
 	},
 }
 
@@ -108,6 +115,7 @@ func printHelp(w io.Writer) {
 	fmt.Fprintln(w, "  agenttrail claude [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
 	fmt.Fprintln(w, "  agenttrail openclaw [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
 	fmt.Fprintln(w, "  agenttrail opencode <export-json|dir|session-id> --out <file|-> [--limit N] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  agenttrail hermes [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
 	fmt.Fprintln(w, "  agenttrail version")
 }
 
@@ -332,7 +340,7 @@ func runDoctor(args []string, stdout io.Writer) error {
 			report.Warnings = append(report.Warnings, fmt.Sprintf("%s status is %s", source.Kind, source.Status))
 		}
 		if source.Exists && source.JSONLFiles == 0 && source.Status == "ready" {
-			report.Warnings = append(report.Warnings, fmt.Sprintf("%s root exists but has no JSONL files", source.Kind))
+			report.Warnings = append(report.Warnings, fmt.Sprintf("%s root exists but has no supported files", source.Kind))
 		}
 	}
 	if *jsonOut {
@@ -433,7 +441,11 @@ func Inspect(source, path string) (InspectReport, error) {
 	if source == "opencode" {
 		return inspectOpenCodeExport(report)
 	}
-	files, err := sources.ListJSONLFiles(path, sources.DefaultInclude)
+	include := sources.DefaultInclude
+	if source == "hermes" {
+		include = hermes.Include
+	}
+	files, err := sources.ListJSONLFiles(path, include)
 	if err != nil {
 		return report, err
 	}
@@ -565,7 +577,7 @@ func Discover() Discovery {
 		{Kind: "claude", Root: homePath(".claude", "projects"), Description: "Claude project JSONL"},
 		{Kind: "openclaw", Root: homePath(".openclaw", "agents"), Description: "OpenClaw agent session JSONL"},
 		{Kind: "opencode", Root: homePath(".local", "share", "opencode"), DBPath: homePath(".local", "share", "opencode", "opencode.db"), Description: "OpenCode sanitized export JSON or session IDs"},
-		{Kind: "hermes", Root: homePath(".hermes"), Description: "Hermes logs, parser blocked on samples"},
+		{Kind: "hermes", Root: homePath(".hermes", "sessions"), Description: "Hermes session snapshots and trajectory JSONL"},
 	}
 	for i := range specs {
 		specs[i] = enrichDiscovery(specs[i])
@@ -595,14 +607,18 @@ func enrichDiscovery(root DiscoveredRoot) DiscoveredRoot {
 		return root
 	}
 	root.Exists = true
-	files, err := sources.ListJSONLFiles(root.Root, sources.DefaultInclude)
+	include := sources.DefaultInclude
+	if root.Kind == "hermes" {
+		include = hermes.Include
+	}
+	files, err := sources.ListJSONLFiles(root.Root, include)
 	if err != nil {
 		root.Status = "error"
 		return root
 	}
 	root.JSONLFiles = len(files)
 	switch root.Kind {
-	case "opencode", "hermes":
+	case "opencode":
 		root.Status = "blocked_on_samples"
 	default:
 		root.Status = "ready"

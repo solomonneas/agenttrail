@@ -10,14 +10,23 @@ Supported first-pass sources:
 - Claude project JSONL under `~/.claude/projects`
 - OpenClaw agent sessions and trajectories under `~/.openclaw/agents`
 - OpenCode sanitized export JSON from `opencode export <sessionID> --sanitize`
+- Hermes session snapshots and trajectory JSONL under `~/.hermes/sessions`
 
-Hermes is discovery-only until redacted real session logs are available.
+Hermes `state.db` is observed but not parsed yet. AgentTrail reads opt-in `session_*.json` snapshots and trajectory JSONL files.
 
 ## Build
 
 ```bash
 go build -o bin/agenttrail ./cmd/agenttrail
 ```
+
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/solomonneas/agenttrail/master/install.sh | sh
+```
+
+Or download a release binary and verify it with `checksums.txt`.
 
 ## Usage
 
@@ -30,6 +39,7 @@ agenttrail claude ~/.claude/projects --out claude.adapter.jsonl --limit 100
 agenttrail openclaw ~/.openclaw/agents --out openclaw.adapter.jsonl --since 2026-06-01
 opencode export <session-id> --sanitize > opencode-session.json
 agenttrail opencode opencode-session.json --out opencode.adapter.jsonl
+agenttrail hermes ~/.hermes/sessions --out hermes.adapter.jsonl
 ```
 
 Dry-run scans count files, generated records, and warnings without writing adapter records:
@@ -39,6 +49,7 @@ agenttrail codex ~/.codex/sessions --dry-run --json
 agenttrail claude ~/.claude/projects --dry-run --json
 agenttrail openclaw ~/.openclaw/agents --dry-run --json
 agenttrail opencode opencode-session.json --dry-run --json
+agenttrail hermes ~/.hermes/sessions --dry-run --json
 ```
 
 Redaction can be requested for exported records:
@@ -47,6 +58,7 @@ Redaction can be requested for exported records:
 agenttrail claude ~/.claude/projects --out - --redact paths
 agenttrail codex ~/.codex/sessions --out - --redact paths,secrets
 agenttrail opencode opencode-session.json --out - --redact all
+agenttrail hermes ~/.hermes/sessions --out - --redact paths,secrets
 ```
 
 Pipe into Logspine:
@@ -60,6 +72,7 @@ Or use Logspine's wrapper when `agenttrail` is installed on `PATH`:
 ```bash
 spine import agenttrail codex ~/.codex/sessions --json
 spine import agenttrail opencode opencode-session.json --json
+spine import agenttrail hermes ~/.hermes/sessions --json
 ```
 
 ## Privacy Boundary
@@ -89,3 +102,4 @@ Each output line is one `logspine.adapter.v1` JSON object with:
 - `raw.format=json`, `raw.path`, `raw.hash`, and `raw.ordinal`
 
 See `docs/ADAPTER_CONTRACT.md` for the contract shape.
+See `docs/RECORD_EXAMPLES.md` for one canonical record example per source.

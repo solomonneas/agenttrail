@@ -591,6 +591,11 @@ func ExtractArtifacts(itemID string, m map[string]any) []adapter.Artifact {
 			add("url", "", s, "")
 		}
 	}
+	for _, key := range []string{"cmd", "command", "shell_command"} {
+		if s := TextFromAny(m[key], 4000); s != "" {
+			add("command", "", "", s)
+		}
+	}
 	for _, key := range []string{"stdout", "stderr", "output", "log"} {
 		if s := TextFromAny(m[key], 4000); s != "" {
 			add("log", "", "", s)

@@ -26,6 +26,7 @@ jobs:
             if [ "$goos" = "windows" ]; then suffix=".exe"; fi
             GOOS="$goos" GOARCH="$goarch" go build -o "dist/agenttrail-${goos}-${goarch}${suffix}" ./cmd/agenttrail
           done
+          (cd dist && sha256sum * > checksums.txt)
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}

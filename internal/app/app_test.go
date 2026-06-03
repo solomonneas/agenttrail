@@ -25,6 +25,8 @@ func TestExportCommandsEmitValidAdapterRecords(t *testing.T) {
 		{"openclaw", "openclaw-session.fixture.jsonl", "openclaw"},
 		{"openclaw", "openclaw-trajectory.fixture.jsonl", "openclaw"},
 		{"opencode", "opencode-export.fixture.json", "opencode"},
+		{"hermes", "session_hermes-demo.fixture.json", "hermes"},
+		{"hermes", "hermes-trajectory.fixture.jsonl", "hermes"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -195,6 +197,38 @@ func TestGoldenFixtureFields(t *testing.T) {
 	}
 }
 
+func TestHermesSnapshotAndTrajectoryFields(t *testing.T) {
+	snapshot := parseRecords(t, exportFixture(t, "hermes", "session_hermes-demo.fixture.json"))
+	if len(snapshot) != 4 {
+		t.Fatalf("Hermes snapshot records = %d, want 4", len(snapshot))
+	}
+	if snapshot[0].Collection.ExternalID != "hermes:session:hermes-demo" {
+		t.Fatalf("collection external id = %q", snapshot[0].Collection.ExternalID)
+	}
+	if snapshot[2].Item.ExternalID != "hermes:tool_call:hermes-tool-1" {
+		t.Fatalf("tool call external id = %q", snapshot[2].Item.ExternalID)
+	}
+	if len(snapshot[2].Artifacts) == 0 || snapshot[2].Artifacts[0].Kind != "command" {
+		t.Fatalf("tool call command artifact missing: %#v", snapshot[2].Artifacts)
+	}
+	if snapshot[3].Actor == nil || snapshot[3].Actor.Type != "tool" {
+		t.Fatalf("tool actor = %#v", snapshot[3].Actor)
+	}
+	if snapshot[3].Item.Kind != "tool_call" {
+		t.Fatalf("tool result kind = %q", snapshot[3].Item.Kind)
+	}
+	if !hasRelation(snapshot, "hermes:tool_call:hermes-tool-1", "result_of") {
+		t.Fatalf("Hermes tool result relation missing")
+	}
+	trajectory := parseRecords(t, exportFixture(t, "hermes", "hermes-trajectory.fixture.jsonl"))
+	if len(trajectory) != 2 {
+		t.Fatalf("Hermes trajectory records = %d, want 2", len(trajectory))
+	}
+	if trajectory[1].Actor == nil || trajectory[1].Actor.Type != "assistant" {
+		t.Fatalf("trajectory assistant actor = %#v", trajectory[1].Actor)
+	}
+}
+
 func TestMalformedInputWarnsAndKeepsGoing(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"codex", fixturePath("malformed-unknown.fixture.jsonl"), "--out", "-", "--json"}, &stdout, &stderr)
@@ -250,6 +284,24 @@ func TestInspectReportsStructureOnly(t *testing.T) {
 	}
 	if report.Records != 2 || report.EventTypes["part:tool"] != 1 {
 		t.Fatalf("unexpected inspect report: %#v", report)
+	}
+}
+
+func TestInspectHermesReportsStructureOnly(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"inspect", "hermes", fixturePath("session_hermes-demo.fixture.json"), "--json"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("exit %d stderr=%s", code, stderr.String())
+	}
+	if strings.Contains(stdout.String(), "Hermes snapshots can be normalized") {
+		t.Fatalf("inspect leaked fixture text: %s", stdout.String())
+	}
+	var report InspectReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("invalid inspect JSON: %v", err)
+	}
+	if report.Files != 1 {
+		t.Fatalf("files = %d, want 1", report.Files)
 	}
 }
 

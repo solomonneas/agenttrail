@@ -35,7 +35,7 @@ Identity should be deterministic. If a source lacks stable IDs, AgentTrail creat
 AgentTrail scanners:
 
 - Accept a file or directory.
-- Walk relevant `.jsonl` files recursively.
+- Walk relevant `.jsonl` files recursively, plus source-specific JSON files such as Hermes `session_*.json` snapshots.
 - Skip obvious backups, deleted files, `skills-prompts`, and sidecar metadata.
 - Preserve raw refs with `raw.format=json`, `raw.path`, `raw.hash`, and `raw.ordinal`.
 - Emit warnings and keep going on malformed or unknown event shapes.
@@ -54,3 +54,12 @@ opencode export <sessionID> --sanitize
 ```
 
 AgentTrail can also run the local export command when passed an OpenCode session ID. It does not parse OpenCode's private SQLite database directly.
+
+Hermes support consumes:
+
+- `~/.hermes/sessions/session_*.json` snapshots when Hermes has `sessions.write_json_snapshots: true`
+- `trajectory_samples.jsonl`
+- `failed_trajectories.jsonl`
+- other trajectory-named JSONL files with ShareGPT-style `conversations`
+
+It does not parse Hermes `state.db` directly.

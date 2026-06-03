@@ -1,15 +1,19 @@
 # Hermes Adapter Status
 
-Hermes native export remains blocked on a real redacted log sample.
+AgentTrail supports local Hermes files that have stable, readable shapes:
 
-Current local state only showed Hermes configuration and plugins, not readable session logs. Do not invent a parser from configuration files.
+- opt-in `~/.hermes/sessions/session_<id>.json` snapshots
+- `trajectory_samples.jsonl`
+- `failed_trajectories.jsonl`
+- other trajectory-named JSONL files with ShareGPT-style `conversations`
 
-To unblock support:
+The scanner does not parse `state.db` yet. Hermes documents SQLite as the canonical session store, but AgentTrail avoids a SQLite dependency and schema coupling until we have enough redacted samples to justify that surface.
 
-1. Recreate a Hermes run in a disposable environment.
-2. Capture the smallest possible redacted session log sample.
-3. Record only structural fields, event types, timestamps, actor/model identifiers, tool calls, artifacts, and raw references.
-4. Add the sample under `testdata/harnesses/`.
-5. Implement a source parser that emits `logspine.adapter.v1`.
+Use:
 
-Until then, `agenttrail discover --json` should report Hermes as blocked on samples.
+```bash
+agenttrail hermes ~/.hermes/sessions --dry-run --json
+agenttrail hermes ~/.hermes/sessions --out -
+```
+
+To make Hermes write snapshot JSON, enable `sessions.write_json_snapshots: true` in the Hermes config. Trajectory JSONL is available when trajectory saving is enabled. Exported text remains untrusted evidence.
