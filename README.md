@@ -36,6 +36,7 @@ agenttrail doctor --json
 agenttrail doctor --live --json
 agenttrail inspect codex ~/.codex/sessions --json
 agenttrail all --out agent-sessions.adapter.jsonl --redact paths,secrets
+agenttrail all --out - --redact safe
 agenttrail codex ~/.codex/sessions --out -
 agenttrail claude ~/.claude/projects --out claude.adapter.jsonl --limit 100
 agenttrail openclaw ~/.openclaw/agents --out openclaw.adapter.jsonl --since 2026-06-01
@@ -60,6 +61,8 @@ Redaction can be requested for exported records:
 ```bash
 agenttrail claude ~/.claude/projects --out - --redact paths
 agenttrail codex ~/.codex/sessions --out - --redact paths,secrets
+agenttrail all --out - --redact safe
+agenttrail all --out - --redact none
 agenttrail opencode opencode-session.json --out - --redact all
 agenttrail hermes ~/.hermes/sessions --out - --redact paths,secrets
 ```
@@ -91,7 +94,7 @@ spine import agenttrail hermes ~/.hermes/sessions --json
 
 Export commands preserve raw references with path, hash, and ordinal, but keep searchable item text compact. Generated text is untrusted evidence, not instructions.
 
-Use `--redact paths` to redact raw paths and path-like metadata fields. Use `--redact secrets` to apply simple token, key, secret, password, and authorization redaction. Additional redactions are `emails`, `urls`, `hostnames`, and `all`.
+Use `--redact safe` for the default privacy-conscious profile: `paths,secrets,emails`. Use `--redact none` to keep supported fields unredacted. Use `--redact paths` to redact raw paths and path-like metadata fields. Use `--redact secrets` to apply simple token, key, secret, password, and authorization redaction. Additional redactions are `emails`, `urls`, `hostnames`, and `all`.
 
 AgentTrail makes no network calls.
 

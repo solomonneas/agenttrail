@@ -47,7 +47,7 @@ AgentTrail scanners:
 
 `--dry-run --json` reports scan counts and warnings without writing adapter records. `discover`, `doctor`, and `doctor --live` report source roots, counts, file manifests, and warnings only, not transcript content.
 
-`--redact paths` redacts raw paths and path-like metadata fields. `--redact secrets` applies simple secret-pattern redaction to generated text and metadata before records are written. Additional redactions are `emails`, `urls`, `hostnames`, and `all`.
+`--redact safe` applies the recommended privacy-conscious profile: `paths,secrets,emails`. `--redact none` disables requested redactions. `--redact paths` redacts raw paths and path-like metadata fields. `--redact secrets` applies simple secret-pattern redaction to generated text and metadata before records are written. Additional redactions are `emails`, `urls`, `hostnames`, and `all`.
 
 OpenCode support consumes sanitized export JSON from:
 

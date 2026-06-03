@@ -5,7 +5,7 @@ AgentTrail exports local agent-session logs. Logspine archives and indexes evide
 The boundary is `logspine.adapter.v1` JSONL:
 
 ```bash
-agenttrail all --out - --redact paths,secrets | spine import adapter -
+agenttrail all --out - --redact safe | spine import adapter -
 agenttrail codex ~/.codex/sessions --out - | spine import adapter -
 agenttrail claude ~/.claude/projects --out - | spine import adapter -
 agenttrail openclaw ~/.openclaw/agents --out - | spine import adapter -

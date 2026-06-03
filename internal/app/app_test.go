@@ -205,6 +205,28 @@ func TestRedactAllIncludesEmailsURLsAndHosts(t *testing.T) {
 	}
 }
 
+func TestRedactionProfiles(t *testing.T) {
+	safe, err := parseRedactions("safe")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{"paths", "secrets", "emails"} {
+		if !safe[key] {
+			t.Fatalf("safe profile missing %s: %v", key, safe)
+		}
+	}
+	if safe["urls"] || safe["hostnames"] {
+		t.Fatalf("safe profile redacts too much: %v", safe)
+	}
+	none, err := parseRedactions("none")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(none) != 0 {
+		t.Fatalf("none profile = %v, want empty", none)
+	}
+}
+
 func TestSummaryOutWritesManifest(t *testing.T) {
 	outPath := filepath.Join(t.TempDir(), "summary.json")
 	var stdout, stderr bytes.Buffer

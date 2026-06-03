@@ -116,15 +116,15 @@ func printHelp(w io.Writer) {
 	fmt.Fprintln(w, "agenttrail exports local agent session logs to logspine.adapter.v1 JSONL.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Usage:")
-	fmt.Fprintln(w, "  agenttrail all --out <file|-> [--sources codex,claude,openclaw,hermes] [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  agenttrail all --out <file|-> [--sources codex,claude,openclaw,hermes] [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
 	fmt.Fprintln(w, "  agenttrail discover [--json]")
 	fmt.Fprintln(w, "  agenttrail doctor [--json] [--live]")
 	fmt.Fprintln(w, "  agenttrail inspect <source> <path> [--json]")
-	fmt.Fprintln(w, "  agenttrail codex [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
-	fmt.Fprintln(w, "  agenttrail claude [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
-	fmt.Fprintln(w, "  agenttrail openclaw [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
-	fmt.Fprintln(w, "  agenttrail opencode <export-json|dir|session-id> --out <file|-> [--limit N] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
-	fmt.Fprintln(w, "  agenttrail hermes [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  agenttrail codex [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  agenttrail claude [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  agenttrail openclaw [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  agenttrail opencode <export-json|dir|session-id> --out <file|-> [--limit N] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  agenttrail hermes [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
 	fmt.Fprintln(w, "  agenttrail version")
 }
 
@@ -383,6 +383,12 @@ func parseRedactions(raw string) (map[string]bool, error) {
 			continue
 		}
 		switch part {
+		case "none":
+			return map[string]bool{}, nil
+		case "safe":
+			out["paths"] = true
+			out["secrets"] = true
+			out["emails"] = true
 		case "all":
 			out["paths"] = true
 			out["secrets"] = true
