@@ -5,11 +5,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/openclaw/agenttrail/internal/adapter"
+	"github.com/openclaw/agenttrail/internal/sources"
 )
 
 func TestExportCommandsEmitValidAdapterRecords(t *testing.T) {
@@ -22,6 +24,7 @@ func TestExportCommandsEmitValidAdapterRecords(t *testing.T) {
 		{"claude", "claude-project.fixture.jsonl", "claude"},
 		{"openclaw", "openclaw-session.fixture.jsonl", "openclaw"},
 		{"openclaw", "openclaw-trajectory.fixture.jsonl", "openclaw"},
+		{"opencode", "opencode-export.fixture.json", "opencode"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -114,6 +117,40 @@ func TestRedactPathsAndSecrets(t *testing.T) {
 	}
 }
 
+func TestRedactAllIncludesEmailsURLsAndHosts(t *testing.T) {
+	opts, err := parseRedactions("all")
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := "token=abc123 email demo@example.com url https://private.example.com/path host build.internal"
+	redacted := sourcesRedactText(text, opts)
+	for _, forbidden := range []string{"abc123", "demo@example.com", "https://private.example.com/path", "build.internal"} {
+		if strings.Contains(redacted, forbidden) {
+			t.Fatalf("redaction leaked %q in %q", forbidden, redacted)
+		}
+	}
+}
+
+func TestSummaryOutWritesManifest(t *testing.T) {
+	outPath := filepath.Join(t.TempDir(), "summary.json")
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"codex", fixturePath("codex-session.fixture.jsonl"), "--out", "-", "--limit", "1", "--summary-out", outPath}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("exit %d stderr=%s", code, stderr.String())
+	}
+	var summary map[string]any
+	if err := readJSONFile(outPath, &summary); err != nil {
+		t.Fatal(err)
+	}
+	if summary["records"].(float64) != 1 {
+		t.Fatalf("records = %v, want 1", summary["records"])
+	}
+	files := summary["files"].([]any)
+	if len(files) != 1 {
+		t.Fatalf("files = %d, want 1", len(files))
+	}
+}
+
 func TestFixtureOutputIsDeterministic(t *testing.T) {
 	first := exportFixture(t, "claude", "claude-project.fixture.jsonl")
 	second := exportFixture(t, "claude", "claude-project.fixture.jsonl")
@@ -134,6 +171,27 @@ func TestToolRelationsArePreserved(t *testing.T) {
 	claudeRecords := parseRecords(t, exportFixture(t, "claude", "claude-project.fixture.jsonl"))
 	if !hasRelation(claudeRecords, "claude:tool_use:", "result_of") {
 		t.Fatalf("missing Claude tool result relation")
+	}
+}
+
+func TestGoldenFixtureFields(t *testing.T) {
+	records := parseRecords(t, exportFixture(t, "opencode", "opencode-export.fixture.json"))
+	if len(records) != 2 {
+		t.Fatalf("OpenCode records = %d, want 2", len(records))
+	}
+	first := records[0]
+	if first.Item.ExternalID != "opencode:message:msg_user" {
+		t.Fatalf("external id = %q", first.Item.ExternalID)
+	}
+	if first.Actor == nil || first.Actor.Type != "human" {
+		t.Fatalf("actor = %#v", first.Actor)
+	}
+	second := records[1]
+	if len(second.Artifacts) == 0 || second.Artifacts[0].Kind != "command" {
+		t.Fatalf("expected command artifact: %#v", second.Artifacts)
+	}
+	if second.Raw.Ordinal == nil || *second.Raw.Ordinal != 2 {
+		t.Fatalf("raw ordinal = %#v", second.Raw.Ordinal)
 	}
 }
 
@@ -177,6 +235,24 @@ func TestDoctorReportsNoContent(t *testing.T) {
 	}
 }
 
+func TestInspectReportsStructureOnly(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"inspect", "opencode", fixturePath("opencode-export.fixture.json"), "--json"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("exit %d stderr=%s", code, stderr.String())
+	}
+	if strings.Contains(stdout.String(), "OpenCode adapter contract fixture") {
+		t.Fatalf("inspect leaked fixture text: %s", stdout.String())
+	}
+	var report InspectReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("invalid inspect JSON: %v", err)
+	}
+	if report.Records != 2 || report.EventTypes["part:tool"] != 1 {
+		t.Fatalf("unexpected inspect report: %#v", report)
+	}
+}
+
 func TestDiscoverDoesNotPrintContent(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"discover", "--json"}, &stdout, &stderr)
@@ -197,6 +273,24 @@ func TestDiscoverDoesNotPrintContent(t *testing.T) {
 
 func fixturePath(name string) string {
 	return filepath.Join("..", "..", "testdata", "harnesses", name)
+}
+
+func readJSONFile(path string, v any) error {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, v)
+}
+
+func sourcesRedactText(text string, redactions map[string]bool) string {
+	return sources.RedactText(text, sources.Options{
+		RedactPaths:     redactions["paths"],
+		RedactSecrets:   redactions["secrets"],
+		RedactEmails:    redactions["emails"],
+		RedactURLs:      redactions["urls"],
+		RedactHostnames: redactions["hostnames"],
+	})
 }
 
 func exportFixture(t *testing.T, command, fixture string) string {

@@ -19,10 +19,13 @@ import (
 )
 
 type Options struct {
-	Limit         int
-	Since         string
-	RedactPaths   bool
-	RedactSecrets bool
+	Limit           int
+	Since           string
+	RedactPaths     bool
+	RedactSecrets   bool
+	RedactEmails    bool
+	RedactURLs      bool
+	RedactHostnames bool
 }
 
 type Result struct {
@@ -221,7 +224,7 @@ func WriteRecord(w io.Writer, rec adapter.Record) error {
 }
 
 func ApplyRedaction(rec *adapter.Record, opts Options) {
-	if rec == nil || (!opts.RedactPaths && !opts.RedactSecrets) {
+	if rec == nil || !opts.HasRedactions() {
 		return
 	}
 	if opts.RedactPaths {
@@ -236,15 +239,15 @@ func ApplyRedaction(rec *adapter.Record, opts Options) {
 			rec.Artifacts[i].Metadata = redactMetadata(rec.Artifacts[i].Metadata, opts)
 		}
 	}
-	if opts.RedactSecrets {
-		rec.Item.Text = RedactSecrets(rec.Item.Text)
+	if opts.RedactSecrets || opts.RedactEmails || opts.RedactURLs || opts.RedactHostnames {
+		rec.Item.Text = RedactText(rec.Item.Text, opts)
 		for i := range rec.Artifacts {
-			rec.Artifacts[i].Text = RedactSecrets(rec.Artifacts[i].Text)
-			rec.Artifacts[i].URL = RedactSecrets(rec.Artifacts[i].URL)
+			rec.Artifacts[i].Text = RedactText(rec.Artifacts[i].Text, opts)
+			rec.Artifacts[i].URL = RedactText(rec.Artifacts[i].URL, opts)
 		}
 		for i := range rec.Links {
-			rec.Links[i].URL = RedactSecrets(rec.Links[i].URL)
-			rec.Links[i].Text = RedactSecrets(rec.Links[i].Text)
+			rec.Links[i].URL = RedactText(rec.Links[i].URL, opts)
+			rec.Links[i].Text = RedactText(rec.Links[i].Text, opts)
 		}
 		rec.Collection.Metadata = redactMetadata(rec.Collection.Metadata, opts)
 		rec.Item.Metadata = redactMetadata(rec.Item.Metadata, opts)
@@ -255,6 +258,10 @@ func ApplyRedaction(rec *adapter.Record, opts Options) {
 			rec.Artifacts[i].Metadata = redactMetadata(rec.Artifacts[i].Metadata, opts)
 		}
 	}
+}
+
+func (o Options) HasRedactions() bool {
+	return o.RedactPaths || o.RedactSecrets || o.RedactEmails || o.RedactURLs || o.RedactHostnames
 }
 
 func RedactPath(path string) string {
@@ -280,6 +287,29 @@ var secretPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)(xox[baprs]-[A-Za-z0-9-]+)`),
 }
 
+var (
+	emailPattern    = regexp.MustCompile(`(?i)\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b`)
+	urlPattern      = regexp.MustCompile(`(?i)\bhttps?://[^\s"'<>]+`)
+	hostnamePattern = regexp.MustCompile(`(?i)\b([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(local|internal|lan|corp|home|dev|test|example|invalid|localhost|[a-z]{2,})\b`)
+)
+
+func RedactText(text string, opts Options) string {
+	out := text
+	if opts.RedactSecrets {
+		out = RedactSecrets(out)
+	}
+	if opts.RedactEmails {
+		out = emailPattern.ReplaceAllString(out, "[redacted-email]")
+	}
+	if opts.RedactURLs {
+		out = urlPattern.ReplaceAllString(out, "[redacted-url]")
+	}
+	if opts.RedactHostnames {
+		out = hostnamePattern.ReplaceAllString(out, "[redacted-host]")
+	}
+	return out
+}
+
 func RedactSecrets(text string) string {
 	if text == "" {
 		return text
@@ -297,8 +327,8 @@ func redactMetadata(raw json.RawMessage, opts Options) json.RawMessage {
 	}
 	var value any
 	if err := json.Unmarshal(raw, &value); err != nil {
-		if opts.RedactSecrets {
-			return json.RawMessage(strconvJSON(RedactSecrets(string(raw))))
+		if opts.RedactSecrets || opts.RedactEmails || opts.RedactURLs || opts.RedactHostnames {
+			return json.RawMessage(strconvJSON(RedactText(string(raw), opts)))
 		}
 		return raw
 	}
@@ -330,7 +360,10 @@ func redactAny(value any, opts Options, key string) any {
 			out = RedactPath(out)
 		}
 		if opts.RedactSecrets {
-			out = RedactSecrets(out)
+			out = RedactText(out, opts)
+		}
+		if opts.RedactEmails || opts.RedactURLs || opts.RedactHostnames {
+			out = RedactText(out, opts)
 		}
 		return out
 	default:
