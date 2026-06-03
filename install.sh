@@ -31,8 +31,8 @@ else
 fi
 
 mkdir -p "$bindir"
-curl -fsSL "$url" -o "$tmp/agenttrail"
+curl -fsSL "$url" -o "$tmp/$asset"
 curl -fsSL "$sums_url" -o "$tmp/checksums.txt"
 (cd "$tmp" && grep " ${asset}$" checksums.txt | sha256sum -c -)
-install -m 0755 "$tmp/agenttrail" "$bindir/agenttrail"
+install -m 0755 "$tmp/$asset" "$bindir/agenttrail"
 "$bindir/agenttrail" version
