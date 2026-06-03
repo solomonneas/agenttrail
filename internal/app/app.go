@@ -21,7 +21,7 @@ import (
 	"github.com/openclaw/agenttrail/internal/sources/opencode"
 )
 
-const Version = "0.1.3"
+const Version = "0.1.4"
 
 type commandDef struct {
 	name        string
