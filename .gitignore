@@ -1,0 +1,4 @@
+bin/
+dist/
+*.adapter.jsonl
+.claude/memory-handoffs/
