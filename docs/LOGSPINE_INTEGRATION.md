@@ -5,6 +5,7 @@ AgentTrail exports local agent-session logs. Logspine archives and indexes evide
 The boundary is `logspine.adapter.v1` JSONL:
 
 ```bash
+agenttrail all --out - --redact paths,secrets | spine import adapter -
 agenttrail codex ~/.codex/sessions --out - | spine import adapter -
 agenttrail claude ~/.claude/projects --out - | spine import adapter -
 agenttrail openclaw ~/.openclaw/agents --out - | spine import adapter -
@@ -23,5 +24,7 @@ spine import agenttrail hermes ~/.hermes/sessions --json
 ```
 
 The wrapper streams AgentTrail output into adapter ingest and records AgentTrail scan manifests when AgentTrail writes a summary.
+
+For mixed-source imports, prefer the pipe form with `agenttrail all`. The adapter records preserve their own `source.kind`, while Logspine keeps archive, FTS, relation, and evidence behavior centralized.
 
 Use AgentTrail for source-specific harness parsing. Use Logspine for SQLite storage, FTS search, relations, scan manifests, and evidence bundles.

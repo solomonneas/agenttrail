@@ -101,6 +101,78 @@ func TestDryRunDoesNotEmitRecords(t *testing.T) {
 	}
 }
 
+func TestAllExportsDefaultRoots(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	copyFixture(t, "codex-session.fixture.jsonl", filepath.Join(home, ".codex", "sessions", "2026", "06", "03", "codex.jsonl"))
+	copyFixture(t, "claude-project.fixture.jsonl", filepath.Join(home, ".claude", "projects", "project", "claude.jsonl"))
+	copyFixture(t, "openclaw-session.fixture.jsonl", filepath.Join(home, ".openclaw", "agents", "demo", "sessions", "openclaw.jsonl"))
+	copyFixture(t, "session_hermes-demo.fixture.json", filepath.Join(home, ".hermes", "sessions", "session_hermes-demo.json"))
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"all", "--out", "-", "--json", "--redact", "paths"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("exit %d stderr=%s", code, stderr.String())
+	}
+	records := parseRecords(t, stdout.String())
+	kinds := map[string]bool{}
+	for _, rec := range records {
+		kinds[rec.Source.Kind] = true
+		if strings.Contains(rec.Raw.Path, home) {
+			t.Fatalf("raw path was not redacted: %s", rec.Raw.Path)
+		}
+	}
+	for _, source := range []string{"codex", "claude", "openclaw", "hermes"} {
+		if !kinds[source] {
+			t.Fatalf("missing source %s in all export; got %v", source, kinds)
+		}
+	}
+	var summary map[string]any
+	if err := json.Unmarshal(stderr.Bytes(), &summary); err != nil {
+		t.Fatalf("summary was not JSON: %v\n%s", err, stderr.String())
+	}
+	if summary["source"] != "all" || summary["records"].(float64) != float64(len(records)) {
+		t.Fatalf("bad all summary: %v records=%d", summary, len(records))
+	}
+}
+
+func TestDoctorLiveReportsCountsOnly(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	secret := "PRIVATE_LIVE_DOCTOR_CONTENT"
+	path := filepath.Join(home, ".codex", "sessions", "2026", "06", "03", "codex.jsonl")
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(`{"type":"event_msg","timestamp":"2026-06-03T00:00:00Z","payload":{"session_id":"demo","role":"user","message":"`+secret+`"}}`+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"doctor", "--live", "--json"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("exit %d stderr=%s", code, stderr.String())
+	}
+	if strings.Contains(stdout.String(), secret) || strings.Contains(stdout.String(), "event_msg") {
+		t.Fatalf("doctor --live leaked content or event detail: %s", stdout.String())
+	}
+	var report DoctorReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("invalid doctor JSON: %v", err)
+	}
+	found := false
+	for _, check := range report.LiveChecks {
+		if check.Source == "codex" {
+			found = true
+			if check.Records != 1 || check.Files != 1 {
+				t.Fatalf("bad codex live check: %#v", check)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("missing codex live check: %#v", report.LiveChecks)
+	}
+}
+
 func TestRedactPathsAndSecrets(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"codex", fixturePath("codex-session.fixture.jsonl"), "--out", "-", "--limit", "1", "--redact", "paths,secrets"}, &stdout, &stderr)
@@ -325,6 +397,20 @@ func TestDiscoverDoesNotPrintContent(t *testing.T) {
 
 func fixturePath(name string) string {
 	return filepath.Join("..", "..", "testdata", "harnesses", name)
+}
+
+func copyFixture(t *testing.T, name, to string) {
+	t.Helper()
+	b, err := os.ReadFile(fixturePath(name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Dir(to), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(to, b, 0o600); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func readJSONFile(path string, v any) error {

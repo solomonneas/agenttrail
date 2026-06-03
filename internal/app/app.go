@@ -21,7 +21,7 @@ import (
 	"github.com/openclaw/agenttrail/internal/sources/opencode"
 )
 
-const Version = "0.1.0"
+const Version = "0.1.3"
 
 type commandDef struct {
 	name        string
@@ -63,6 +63,8 @@ var commands = map[string]commandDef{
 	},
 }
 
+var allSourceOrder = []string{"codex", "claude", "openclaw", "hermes"}
+
 func Run(args []string, stdout, stderr io.Writer) int {
 	if len(args) == 0 || args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
 		printHelp(stdout)
@@ -71,6 +73,12 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	switch args[0] {
 	case "version":
 		fmt.Fprintf(stdout, "agenttrail %s\n", Version)
+		return 0
+	case "all":
+		if err := runAll(args[1:], stdout, stderr); err != nil {
+			fmt.Fprintln(stderr, "error:", err)
+			return 1
+		}
 		return 0
 	case "discover":
 		if err := runDiscover(args[1:], stdout); err != nil {
@@ -108,8 +116,9 @@ func printHelp(w io.Writer) {
 	fmt.Fprintln(w, "agenttrail exports local agent session logs to logspine.adapter.v1 JSONL.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Usage:")
+	fmt.Fprintln(w, "  agenttrail all --out <file|-> [--sources codex,claude,openclaw,hermes] [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
 	fmt.Fprintln(w, "  agenttrail discover [--json]")
-	fmt.Fprintln(w, "  agenttrail doctor [--json]")
+	fmt.Fprintln(w, "  agenttrail doctor [--json] [--live]")
 	fmt.Fprintln(w, "  agenttrail inspect <source> <path> [--json]")
 	fmt.Fprintln(w, "  agenttrail codex [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
 	fmt.Fprintln(w, "  agenttrail claude [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
@@ -117,6 +126,128 @@ func printHelp(w io.Writer) {
 	fmt.Fprintln(w, "  agenttrail opencode <export-json|dir|session-id> --out <file|-> [--limit N] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
 	fmt.Fprintln(w, "  agenttrail hermes [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact paths,secrets,emails,urls,hostnames,all] [--json]")
 	fmt.Fprintln(w, "  agenttrail version")
+}
+
+func runAll(args []string, stdout, stderr io.Writer) error {
+	fs := flag.NewFlagSet("all", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	outPath := fs.String("out", "-", "output file or - for stdout")
+	sourceList := fs.String("sources", strings.Join(allSourceOrder, ","), "comma-separated sources to export")
+	limit := fs.Int("limit", 0, "maximum records to emit across all sources")
+	since := fs.String("since", "", "minimum item timestamp as RFC3339 or YYYY-MM-DD")
+	dryRun := fs.Bool("dry-run", false, "scan and summarize without writing records")
+	redact := fs.String("redact", "", "comma-separated redactions: paths,secrets,emails,urls,hostnames,all")
+	jsonSummary := fs.Bool("json", false, "write a JSON summary after export")
+	summaryOut := fs.String("summary-out", "", "write JSON summary to a file")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if len(fs.Args()) != 0 {
+		return errors.New("usage: agenttrail all --out <file|-> [--sources LIST]")
+	}
+	redactions, err := parseRedactions(*redact)
+	if err != nil {
+		return err
+	}
+	selected, err := parseSourceList(*sourceList)
+	if err != nil {
+		return err
+	}
+	var out io.Writer = stdout
+	var file *os.File
+	if *dryRun {
+		out = io.Discard
+	} else if *outPath != "-" {
+		if err := os.MkdirAll(filepath.Dir(*outPath), 0o755); err != nil && filepath.Dir(*outPath) != "." {
+			return err
+		}
+		f, err := os.Create(*outPath)
+		if err != nil {
+			return err
+		}
+		file = f
+		out = f
+	}
+	result := sources.Result{Warnings: []string{}, Files: []sources.FileScan{}}
+	for _, name := range selected {
+		def := commands[name]
+		path := def.defaultRoot()
+		if path == "" {
+			result.Warnings = append(result.Warnings, fmt.Sprintf("%s has no default root; export it explicitly", name))
+			continue
+		}
+		info, err := os.Stat(path)
+		if err != nil || !info.IsDir() {
+			result.Warnings = append(result.Warnings, fmt.Sprintf("%s root missing: %s", name, path))
+			continue
+		}
+		perSourceLimit := 0
+		if *limit > 0 {
+			perSourceLimit = *limit - result.Records
+			if perSourceLimit <= 0 {
+				break
+			}
+		}
+		partial, err := def.generator(path, sources.Options{
+			Limit:           perSourceLimit,
+			Since:           *since,
+			RedactPaths:     redactions["paths"],
+			RedactSecrets:   redactions["secrets"],
+			RedactEmails:    redactions["emails"],
+			RedactURLs:      redactions["urls"],
+			RedactHostnames: redactions["hostnames"],
+		}, out)
+		if err != nil {
+			result.Warnings = append(result.Warnings, fmt.Sprintf("%s: %s", name, err))
+			continue
+		}
+		result.Records += partial.Records
+		result.Warnings = append(result.Warnings, prefixWarnings(name, partial.Warnings)...)
+		result.Files = append(result.Files, partial.Files...)
+	}
+	if file != nil {
+		if err := file.Close(); err != nil {
+			return err
+		}
+	}
+	summary := exportSummary("all", strings.Join(selected, ","), exportTarget(*outPath, *dryRun), *dryRun, redactions, result)
+	summary["sources"] = selected
+	if *jsonSummary {
+		target := stdout
+		if *outPath == "-" && !*dryRun {
+			target = stderr
+		}
+		if err := writeJSON(target, summary); err != nil {
+			return err
+		}
+	}
+	if *summaryOut != "" {
+		if err := os.MkdirAll(filepath.Dir(*summaryOut), 0o755); err != nil && filepath.Dir(*summaryOut) != "." {
+			return err
+		}
+		f, err := os.Create(*summaryOut)
+		if err != nil {
+			return err
+		}
+		if err := writeJSON(f, summary); err != nil {
+			_ = f.Close()
+			return err
+		}
+		if err := f.Close(); err != nil {
+			return err
+		}
+	}
+	if *jsonSummary {
+		return nil
+	}
+	if *dryRun {
+		fmt.Fprintf(stdout, "all dry-run: records=%d warnings=%d files=%d\n", result.Records, len(result.Warnings), len(result.Files))
+		return nil
+	}
+	for _, warning := range result.Warnings {
+		fmt.Fprintln(stderr, "warning:", warning)
+	}
+	return nil
 }
 
 func runExport(def commandDef, args []string, stdout, stderr io.Writer) error {
@@ -316,12 +447,23 @@ type DoctorReport struct {
 	GeneratedAt string           `json:"generated_at"`
 	OK          bool             `json:"ok"`
 	Sources     []DiscoveredRoot `json:"sources"`
+	LiveChecks  []LiveCheck      `json:"live_checks"`
 	Warnings    []string         `json:"warnings"`
+}
+
+type LiveCheck struct {
+	Source   string   `json:"source"`
+	Path     string   `json:"path"`
+	Status   string   `json:"status"`
+	Records  int      `json:"records"`
+	Files    int      `json:"files"`
+	Warnings []string `json:"warnings"`
 }
 
 func runDoctor(args []string, stdout io.Writer) error {
 	fs := flag.NewFlagSet("doctor", flag.ContinueOnError)
 	jsonOut := fs.Bool("json", false, "write JSON")
+	live := fs.Bool("live", false, "run dry-run scanner checks for ready local roots")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -330,6 +472,7 @@ func runDoctor(args []string, stdout io.Writer) error {
 		GeneratedAt: time.Now().UTC().Format(time.RFC3339Nano),
 		OK:          true,
 		Sources:     discovery.Sources,
+		LiveChecks:  []LiveCheck{},
 		Warnings:    []string{},
 	}
 	for _, source := range discovery.Sources {
@@ -343,6 +486,15 @@ func runDoctor(args []string, stdout io.Writer) error {
 			report.Warnings = append(report.Warnings, fmt.Sprintf("%s root exists but has no supported files", source.Kind))
 		}
 	}
+	if *live {
+		report.LiveChecks = runLiveChecks(discovery)
+		for _, check := range report.LiveChecks {
+			if check.Status == "error" {
+				report.OK = false
+				report.Warnings = append(report.Warnings, fmt.Sprintf("%s live check failed", check.Source))
+			}
+		}
+	}
 	if *jsonOut {
 		return writeJSON(stdout, report)
 	}
@@ -354,6 +506,9 @@ func runDoctor(args []string, stdout io.Writer) error {
 	}
 	for _, warning := range report.Warnings {
 		fmt.Fprintln(stdout, "warning:", warning)
+	}
+	for _, check := range report.LiveChecks {
+		fmt.Fprintf(stdout, "live\t%s\trecords=%d\tfiles=%d\twarnings=%d\t%s\n", check.Source, check.Records, check.Files, len(check.Warnings), check.Status)
 	}
 	return nil
 }
@@ -639,4 +794,77 @@ func homePath(parts ...string) string {
 	}
 	all := append([]string{home}, parts...)
 	return filepath.Join(all...)
+}
+
+func parseSourceList(raw string) ([]string, error) {
+	seen := map[string]bool{}
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		name := strings.TrimSpace(part)
+		if name == "" {
+			continue
+		}
+		if name == "all" {
+			for _, source := range allSourceOrder {
+				if !seen[source] {
+					seen[source] = true
+					out = append(out, source)
+				}
+			}
+			continue
+		}
+		def, ok := commands[name]
+		if !ok {
+			return nil, fmt.Errorf("unsupported source %q", name)
+		}
+		if def.defaultRoot() == "" {
+			return nil, fmt.Errorf("%s has no default root; run it explicitly", name)
+		}
+		if !seen[name] {
+			seen[name] = true
+			out = append(out, name)
+		}
+	}
+	if len(out) == 0 {
+		return nil, errors.New("at least one source is required")
+	}
+	return out, nil
+}
+
+func prefixWarnings(source string, warnings []string) []string {
+	out := make([]string, 0, len(warnings))
+	for _, warning := range warnings {
+		out = append(out, source+": "+warning)
+	}
+	return out
+}
+
+func runLiveChecks(discovery Discovery) []LiveCheck {
+	checks := []LiveCheck{}
+	for _, source := range discovery.Sources {
+		def, ok := commands[source.Kind]
+		if !ok || def.defaultRoot() == "" {
+			continue
+		}
+		check := LiveCheck{Source: source.Kind, Path: source.Root, Status: source.Status, Warnings: []string{}}
+		if !source.Exists || source.Status != "ready" {
+			checks = append(checks, check)
+			continue
+		}
+		result, err := def.generator(source.Root, sources.Options{}, io.Discard)
+		if err != nil {
+			check.Status = "error"
+			check.Warnings = []string{err.Error()}
+		} else {
+			check.Status = "ready"
+			check.Records = result.Records
+			check.Files = len(result.Files)
+			check.Warnings = result.Warnings
+			if check.Warnings == nil {
+				check.Warnings = []string{}
+			}
+		}
+		checks = append(checks, check)
+	}
+	return checks
 }

@@ -31,3 +31,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes
+      - name: Verify published install assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p verify
+          gh release download "$GITHUB_REF_NAME" --pattern agenttrail-linux-amd64 --pattern checksums.txt --dir verify
+          (cd verify && sha256sum -c checksums.txt --ignore-missing)
+          chmod +x verify/agenttrail-linux-amd64
+          ./verify/agenttrail-linux-amd64 version

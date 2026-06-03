@@ -43,7 +43,9 @@ AgentTrail scanners:
 - Preserve useful non-secret source structure in `item.metadata`.
 - Emit empty arrays for `artifacts`, `links`, and `relations` when no values are present.
 
-`--dry-run --json` reports scan counts and warnings without writing adapter records. `discover` and `doctor` report source roots and counts only, not transcript content.
+`agenttrail all` exports Codex, Claude, OpenClaw, and Hermes default roots in one stream. OpenCode is explicit-only because session IDs and sanitized export files are user-selected inputs.
+
+`--dry-run --json` reports scan counts and warnings without writing adapter records. `discover`, `doctor`, and `doctor --live` report source roots, counts, file manifests, and warnings only, not transcript content.
 
 `--redact paths` redacts raw paths and path-like metadata fields. `--redact secrets` applies simple secret-pattern redaction to generated text and metadata before records are written. Additional redactions are `emails`, `urls`, `hostnames`, and `all`.
 

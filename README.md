@@ -33,7 +33,9 @@ Or download a release binary and verify it with `checksums.txt`.
 ```bash
 agenttrail discover --json
 agenttrail doctor --json
+agenttrail doctor --live --json
 agenttrail inspect codex ~/.codex/sessions --json
+agenttrail all --out agent-sessions.adapter.jsonl --redact paths,secrets
 agenttrail codex ~/.codex/sessions --out -
 agenttrail claude ~/.claude/projects --out claude.adapter.jsonl --limit 100
 agenttrail openclaw ~/.openclaw/agents --out openclaw.adapter.jsonl --since 2026-06-01
@@ -45,6 +47,7 @@ agenttrail hermes ~/.hermes/sessions --out hermes.adapter.jsonl
 Dry-run scans count files, generated records, and warnings without writing adapter records:
 
 ```bash
+agenttrail all --dry-run --json
 agenttrail codex ~/.codex/sessions --dry-run --json
 agenttrail claude ~/.claude/projects --dry-run --json
 agenttrail openclaw ~/.openclaw/agents --dry-run --json
@@ -64,6 +67,7 @@ agenttrail hermes ~/.hermes/sessions --out - --redact paths,secrets
 Pipe into Logspine:
 
 ```bash
+agenttrail all --out - --redact paths,secrets | spine import adapter -
 agenttrail codex ~/.codex/sessions --out - | spine import adapter -
 ```
 
@@ -80,6 +84,8 @@ spine import agenttrail hermes ~/.hermes/sessions --json
 `discover` reports candidate roots and JSONL counts only. It does not print transcript content.
 
 `doctor` reports source readiness and warnings only. It does not print transcript content.
+
+`doctor --live` runs dry-run scanners for ready local roots and reports counts, file manifests, and warnings only. It does not print generated item text.
 
 `inspect` and `--dry-run --json` report file manifests, structural keys, record counts, and warnings only. They do not print generated item text.
 
@@ -102,4 +108,5 @@ Each output line is one `logspine.adapter.v1` JSON object with:
 - `raw.format=json`, `raw.path`, `raw.hash`, and `raw.ordinal`
 
 See `docs/ADAPTER_CONTRACT.md` for the contract shape.
+See `docs/OPENCODE.md` for the OpenCode sanitized export workflow.
 See `docs/RECORD_EXAMPLES.md` for one canonical record example per source.
