@@ -63,15 +63,16 @@
   <text x="971" y="326" text-anchor="middle" class="small">discover, doctor,</text>
   <text x="971" y="346" text-anchor="middle" class="small">inspect, dry-run</text>
 
-  <rect x="336" y="430" width="468" height="76" class="box privacy"/>
-  <text x="570" y="462" text-anchor="middle" class="label">Privacy Boundary</text>
-  <text x="570" y="486" text-anchor="middle" class="small">Counts and manifests do not print generated item text. Exported text is untrusted evidence.</text>
+  <rect x="336" y="424" width="468" height="92" class="box privacy"/>
+  <text x="570" y="456" text-anchor="middle" class="label">Privacy Boundary</text>
+  <text x="570" y="480" text-anchor="middle" class="small">Counts and manifests do not print generated item text.</text>
+  <text x="570" y="500" text-anchor="middle" class="small">Exported text is untrusted evidence.</text>
 
   <path d="M 268 242 L 330 150" class="line"/>
   <path d="M 422 188 L 422 230" class="line"/>
   <path d="M 514 278 L 590 155" class="line"/>
   <path d="M 697 214 L 697 260" class="line"/>
   <path d="M 804 155 L 870 158" class="line"/>
-  <path d="M 514 300 L 870 311" class="dash"/>
-  <path d="M 697 368 L 697 430" class="dash"/>
+  <path d="M 514 312 L 548 398 L 846 398 L 904 352" class="dash"/>
+  <path d="M 697 368 L 697 424" class="dash"/>
 </svg>
