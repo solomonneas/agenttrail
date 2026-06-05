@@ -23,7 +23,7 @@ AgentTrail follows the same path for each source:
 
 ## With Logspine
 
-![AgentTrail and Logspine flow](docs/agenttrail-logspine-tandem.svg)
+![AgentTrail and Logspine flow](docs/agenttrail-logspine-tandem-v2.svg)
 
 AgentTrail is the source-specific adapter layer. Logspine is the durable evidence layer.
 

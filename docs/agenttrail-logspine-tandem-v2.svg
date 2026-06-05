@@ -75,8 +75,8 @@
   <path d="M 558 203 L 626 203" class="line"/>
   <path d="M 828 203 L 922 191" class="line"/>
   <path d="M 727 244 L 727 318" class="line"/>
-  <path d="M 828 359 L 922 267" class="dash"/>
-  <path d="M 558 347 L 626 359" class="dash"/>
+  <path d="M 828 359 L 862 359 L 862 267 L 922 267" class="dash"/>
+  <path d="M 558 359 L 626 359" class="dash"/>
   <path d="M 988 220 L 988 238" class="line"/>
   <path d="M 988 296 L 988 314" class="line"/>
   <path d="M 988 372 L 988 390" class="line"/>
