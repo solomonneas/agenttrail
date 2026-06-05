@@ -6,6 +6,16 @@ It is a scanner and exporter, not an archive. AgentTrail reads local session fil
 
 AgentTrail makes no network calls.
 
+## Local Evidence Stack
+
+AgentTrail is one part of the local evidence stack:
+
+- AgentTrail handles local agent-session harnesses such as Codex, Claude, OpenClaw, OpenCode, and Hermes.
+- [SourceHarvest](https://github.com/solomonneas/sourceharvest) handles non-harness local source exports such as notes, generic files, crawler exports, and issue exports.
+- [Logspine](https://github.com/solomonneas/logspine) imports the shared adapter contract, archives it, indexes it, searches it, and emits evidence bundles.
+
+AgentTrail should not absorb crawler adapters or general local note/file harvesting. Those belong in SourceHarvest.
+
 ## How It Works
 
 ![AgentTrail flow](docs/agenttrail-how-it-works-v2.svg)
