@@ -8,7 +8,7 @@ AgentTrail makes no network calls.
 
 ## How It Works
 
-![AgentTrail flow](docs/agenttrail-how-it-works.svg)
+![AgentTrail flow](docs/agenttrail-how-it-works-v2.svg)
 
 Editable Excalidraw source: [docs/agenttrail-flowcharts.excalidraw](docs/agenttrail-flowcharts.excalidraw)
 
