@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="560" viewBox="0 0 1120 560" role="img" aria-labelledby="title desc">
+  <title id="title">How AgentTrail works with Logspine</title>
+  <desc id="desc">Flowchart showing AgentTrail exporting adapter JSONL and Logspine importing, storing, indexing, searching, relating, and building evidence bundles.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
+    </marker>
+    <style>
+      .title { font: 700 28px Arial, sans-serif; fill: #0f172a; }
+      .label { font: 700 16px Arial, sans-serif; fill: #0f172a; }
+      .small { font: 13px Arial, sans-serif; fill: #334155; }
+      .box { stroke: #334155; stroke-width: 2; rx: 10; }
+      .input { fill: #e0f2fe; }
+      .agenttrail { fill: #fef3c7; }
+      .contract { fill: #dcfce7; }
+      .logspine { fill: #ede9fe; }
+      .action { fill: #ffe4e6; }
+      .line { stroke: #334155; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #64748b; stroke-width: 2; stroke-dasharray: 6 6; fill: none; marker-end: url(#arrow); }
+      .boundary { stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 8 8; }
+    </style>
+  </defs>
+
+  <rect width="1120" height="560" fill="#ffffff"/>
+  <text x="48" y="52" class="title">AgentTrail in Tandem With Logspine</text>
+
+  <rect x="40" y="92" width="238" height="332" fill="none" class="boundary"/>
+  <text x="159" y="124" text-anchor="middle" class="label">Local Machine</text>
+
+  <rect x="70" y="160" width="178" height="78" class="box input"/>
+  <text x="159" y="192" text-anchor="middle" class="label">Session Files</text>
+  <text x="159" y="214" text-anchor="middle" class="small">JSONL and JSON</text>
+
+  <rect x="70" y="300" width="178" height="78" class="box input"/>
+  <text x="159" y="332" text-anchor="middle" class="label">Sanitized Export</text>
+  <text x="159" y="354" text-anchor="middle" class="small">OpenCode JSON</text>
+
+  <rect x="338" y="144" width="220" height="110" class="box agenttrail"/>
+  <text x="448" y="180" text-anchor="middle" class="label">AgentTrail</text>
+  <text x="448" y="202" text-anchor="middle" class="small">source-specific parsing</text>
+  <text x="448" y="222" text-anchor="middle" class="small">normalization and redaction</text>
+
+  <rect x="338" y="306" width="220" height="82" class="box agenttrail"/>
+  <text x="448" y="340" text-anchor="middle" class="label">Scan Summary</text>
+  <text x="448" y="362" text-anchor="middle" class="small">counts, warnings, manifests</text>
+
+  <rect x="626" y="162" width="202" height="82" class="box contract"/>
+  <text x="727" y="196" text-anchor="middle" class="label">Adapter JSONL</text>
+  <text x="727" y="218" text-anchor="middle" class="small">logspine.adapter.v1</text>
+
+  <rect x="626" y="318" width="202" height="82" class="box contract"/>
+  <text x="727" y="352" text-anchor="middle" class="label">Import Options</text>
+  <text x="727" y="374" text-anchor="middle" class="small">pipe or wrapper command</text>
+
+  <rect x="896" y="98" width="184" height="316" fill="none" class="boundary"/>
+  <text x="988" y="130" text-anchor="middle" class="label">Logspine</text>
+
+  <rect x="922" y="162" width="132" height="58" class="box logspine"/>
+  <text x="988" y="196" text-anchor="middle" class="small">Archive</text>
+
+  <rect x="922" y="238" width="132" height="58" class="box logspine"/>
+  <text x="988" y="272" text-anchor="middle" class="small">Index and Search</text>
+
+  <rect x="922" y="314" width="132" height="58" class="box logspine"/>
+  <text x="988" y="348" text-anchor="middle" class="small">Relations</text>
+
+  <rect x="922" y="390" width="132" height="58" class="box logspine"/>
+  <text x="988" y="424" text-anchor="middle" class="small">Evidence Bundles</text>
+
+  <rect x="338" y="454" width="490" height="58" class="box action"/>
+  <text x="583" y="488" text-anchor="middle" class="label">Boundary: AgentTrail exports, Logspine stores and analyzes.</text>
+
+  <path d="M 248 199 L 338 199" class="line"/>
+  <path d="M 248 339 L 338 226" class="line"/>
+  <path d="M 558 203 L 626 203" class="line"/>
+  <path d="M 828 203 L 922 191" class="line"/>
+  <path d="M 727 244 L 727 318" class="line"/>
+  <path d="M 828 359 L 922 267" class="dash"/>
+  <path d="M 558 347 L 626 359" class="dash"/>
+  <path d="M 988 220 L 988 238" class="line"/>
+  <path d="M 988 296 L 988 314" class="line"/>
+  <path d="M 988 372 L 988 390" class="line"/>
+</svg>

@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="560" viewBox="0 0 1120 560" role="img" aria-labelledby="title desc">
+  <title id="title">How AgentTrail works</title>
+  <desc id="desc">Flowchart showing local session files entering AgentTrail, being scanned and normalized, then written as logspine adapter JSONL.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
+    </marker>
+    <style>
+      .title { font: 700 28px Arial, sans-serif; fill: #0f172a; }
+      .label { font: 700 16px Arial, sans-serif; fill: #0f172a; }
+      .small { font: 13px Arial, sans-serif; fill: #334155; }
+      .box { stroke: #334155; stroke-width: 2; rx: 10; }
+      .source { fill: #e0f2fe; }
+      .process { fill: #fef3c7; }
+      .privacy { fill: #dcfce7; }
+      .output { fill: #ede9fe; }
+      .line { stroke: #334155; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #64748b; stroke-width: 2; stroke-dasharray: 6 6; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1120" height="560" fill="#ffffff"/>
+  <text x="48" y="52" class="title">How AgentTrail Works</text>
+
+  <rect x="48" y="96" width="220" height="292" class="box source"/>
+  <text x="158" y="128" text-anchor="middle" class="label">Local Inputs</text>
+  <text x="72" y="170" class="small">Codex JSONL</text>
+  <text x="72" y="202" class="small">Claude project JSONL</text>
+  <text x="72" y="234" class="small">OpenClaw sessions</text>
+  <text x="72" y="266" class="small">Hermes snapshots</text>
+  <text x="72" y="298" class="small">Hermes trajectories</text>
+  <text x="72" y="330" class="small">OpenCode sanitized export</text>
+  <text x="72" y="362" class="small">Explicit file, directory, or ID</text>
+
+  <rect x="330" y="112" width="184" height="76" class="box process"/>
+  <text x="422" y="144" text-anchor="middle" class="label">CLI Entry</text>
+  <text x="422" y="166" text-anchor="middle" class="small">cmd/agenttrail</text>
+
+  <rect x="330" y="230" width="184" height="96" class="box process"/>
+  <text x="422" y="264" text-anchor="middle" class="label">App Layer</text>
+  <text x="422" y="286" text-anchor="middle" class="small">commands, flags,</text>
+  <text x="422" y="306" text-anchor="middle" class="small">summaries</text>
+
+  <rect x="590" y="96" width="214" height="118" class="box process"/>
+  <text x="697" y="132" text-anchor="middle" class="label">Source Scanners</text>
+  <text x="697" y="154" text-anchor="middle" class="small">codex, claude,</text>
+  <text x="697" y="174" text-anchor="middle" class="small">openclaw, hermes,</text>
+  <text x="697" y="194" text-anchor="middle" class="small">opencode</text>
+
+  <rect x="590" y="260" width="214" height="108" class="box privacy"/>
+  <text x="697" y="294" text-anchor="middle" class="label">Shared Helpers</text>
+  <text x="697" y="316" text-anchor="middle" class="small">walk files, hash raw,</text>
+  <text x="697" y="336" text-anchor="middle" class="small">apply filters, redact,</text>
+  <text x="697" y="356" text-anchor="middle" class="small">write records</text>
+
+  <rect x="870" y="112" width="202" height="92" class="box output"/>
+  <text x="971" y="146" text-anchor="middle" class="label">Adapter Records</text>
+  <text x="971" y="168" text-anchor="middle" class="small">logspine.adapter.v1</text>
+  <text x="971" y="188" text-anchor="middle" class="small">one JSON object per line</text>
+
+  <rect x="870" y="270" width="202" height="82" class="box output"/>
+  <text x="971" y="304" text-anchor="middle" class="label">Diagnostics</text>
+  <text x="971" y="326" text-anchor="middle" class="small">discover, doctor,</text>
+  <text x="971" y="346" text-anchor="middle" class="small">inspect, dry-run</text>
+
+  <rect x="336" y="430" width="468" height="76" class="box privacy"/>
+  <text x="570" y="462" text-anchor="middle" class="label">Privacy Boundary</text>
+  <text x="570" y="486" text-anchor="middle" class="small">Counts and manifests do not print generated item text. Exported text is untrusted evidence.</text>
+
+  <path d="M 268 242 L 330 150" class="line"/>
+  <path d="M 422 188 L 422 230" class="line"/>
+  <path d="M 514 278 L 590 155" class="line"/>
+  <path d="M 697 214 L 697 260" class="line"/>
+  <path d="M 804 155 L 870 158" class="line"/>
+  <path d="M 514 300 L 870 311" class="dash"/>
+  <path d="M 697 368 L 697 430" class="dash"/>
+</svg>
