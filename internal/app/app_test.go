@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -196,12 +197,84 @@ func TestRedactAllIncludesEmailsURLsAndHosts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	text := "token=abc123 email demo@example.com url https://private.example.com/path host build.internal"
+	text := "token=abc123 slack xoxb-1234567890-abcdef email demo@example.com url https://private.example.com/path host build.internal"
 	redacted := sourcesRedactText(text, opts)
-	for _, forbidden := range []string{"abc123", "demo@example.com", "https://private.example.com/path", "build.internal"} {
+	for _, forbidden := range []string{"abc123", "xoxb-1234567890-abcdef", "demo@example.com", "https://private.example.com/path", "build.internal"} {
 		if strings.Contains(redacted, forbidden) {
 			t.Fatalf("redaction leaked %q in %q", forbidden, redacted)
 		}
+	}
+}
+
+func TestExportFilesArePrivate(t *testing.T) {
+	dir := t.TempDir()
+	outPath := filepath.Join(dir, "nested", "records.jsonl")
+	summaryPath := filepath.Join(dir, "nested", "summary.json")
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"codex", fixturePath("codex-session.fixture.jsonl"), "--out", outPath, "--summary-out", summaryPath}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("exit %d stderr=%s", code, stderr.String())
+	}
+	assertMode(t, filepath.Join(dir, "nested"), 0o700)
+	assertMode(t, outPath, 0o600)
+	assertMode(t, summaryPath, 0o600)
+}
+
+func TestFailedExportDoesNotReplaceExistingOutput(t *testing.T) {
+	dir := t.TempDir()
+	outPath := filepath.Join(dir, "records.jsonl")
+	if err := os.WriteFile(outPath, []byte("original\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"codex", filepath.Join(dir, "missing"), "--out", outPath}, &stdout, &stderr)
+	if code == 0 {
+		t.Fatalf("expected failure, stdout=%s stderr=%s", stdout.String(), stderr.String())
+	}
+	b, err := os.ReadFile(outPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(b) != "original\n" {
+		t.Fatalf("output was replaced on failure: %q", string(b))
+	}
+	matches, err := filepath.Glob(filepath.Join(dir, ".records.jsonl.tmp-*"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 0 {
+		t.Fatalf("temp files left behind: %v", matches)
+	}
+}
+
+func TestAllFailsOnInvalidSince(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	copyFixture(t, "codex-session.fixture.jsonl", filepath.Join(home, ".codex", "sessions", "codex.jsonl"))
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"all", "--sources", "codex", "--out", "-", "--since", "not-a-date", "--json"}, &stdout, &stderr)
+	if code == 0 {
+		t.Fatalf("expected failure, stdout=%s stderr=%s", stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "invalid --since date") {
+		t.Fatalf("expected invalid since error, got stderr=%s", stderr.String())
+	}
+}
+
+func TestAllFailsOnWriteError(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	copyFixture(t, "codex-session.fixture.jsonl", filepath.Join(home, ".codex", "sessions", "codex.jsonl"))
+
+	var stderr bytes.Buffer
+	code := Run([]string{"all", "--sources", "codex", "--out", "-"}, failingWriter{}, &stderr)
+	if code == 0 {
+		t.Fatalf("expected failure, stderr=%s", stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "write failed") {
+		t.Fatalf("expected write error, got stderr=%s", stderr.String())
 	}
 }
 
@@ -441,6 +514,23 @@ func readJSONFile(path string, v any) error {
 		return err
 	}
 	return json.Unmarshal(b, v)
+}
+
+func assertMode(t *testing.T, path string, want os.FileMode) {
+	t.Helper()
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := info.Mode().Perm(); got != want {
+		t.Fatalf("%s mode = %#o, want %#o", path, got, want)
+	}
+}
+
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) {
+	return 0, errors.New("write failed")
 }
 
 func sourcesRedactText(text string, redactions map[string]bool) string {

@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,6 +16,8 @@ import (
 	"github.com/openclaw/agenttrail/internal/adapter"
 	"github.com/openclaw/agenttrail/internal/sources"
 )
+
+const opencodeExportTimeout = 2 * time.Minute
 
 func Generate(path string, opts sources.Options, w io.Writer) (sources.Result, error) {
 	since, hasSince, err := sources.ParseSince(opts.Since)
@@ -114,11 +117,16 @@ func readExport(input string) (exportFile, []byte, error) {
 		}
 		return exp, b, nil
 	}
-	cmd := exec.Command("opencode", "export", input, "--sanitize")
+	ctx, cancel := context.WithTimeout(context.Background(), opencodeExportTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "opencode", "export", input, "--sanitize")
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	b, err := cmd.Output()
 	if err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return exportFile{}, nil, fmt.Errorf("opencode export timed out after %s", opencodeExportTimeout)
+		}
 		msg := strings.TrimSpace(stderr.String())
 		if msg == "" {
 			msg = err.Error()

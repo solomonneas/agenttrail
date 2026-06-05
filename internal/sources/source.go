@@ -281,10 +281,15 @@ func RedactPath(path string) string {
 	return path
 }
 
-var secretPatterns = []*regexp.Regexp{
-	regexp.MustCompile(`(?i)(api[_-]?key|token|secret|password|authorization|bearer)(["'\s:=]+)[^"'\s,}]+`),
-	regexp.MustCompile(`(?i)sk-[A-Za-z0-9_-]{16,}`),
-	regexp.MustCompile(`(?i)(xox[baprs]-[A-Za-z0-9-]+)`),
+type secretPattern struct {
+	re          *regexp.Regexp
+	replacement string
+}
+
+var secretPatterns = []secretPattern{
+	{regexp.MustCompile(`(?i)(api[_-]?key|token|secret|password|authorization|bearer)(["'\s:=]+)[^"'\s,}]+`), `$1$2[redacted-secret]`},
+	{regexp.MustCompile(`(?i)sk-[A-Za-z0-9_-]{16,}`), `[redacted-secret]`},
+	{regexp.MustCompile(`(?i)xox[baprs]-[A-Za-z0-9-]+`), `[redacted-secret]`},
 }
 
 var (
@@ -316,7 +321,7 @@ func RedactSecrets(text string) string {
 	}
 	out := text
 	for _, pattern := range secretPatterns {
-		out = pattern.ReplaceAllString(out, "$1$2[redacted-secret]")
+		out = pattern.re.ReplaceAllString(out, pattern.replacement)
 	}
 	return out
 }

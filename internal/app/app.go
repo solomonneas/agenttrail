@@ -153,20 +153,20 @@ func runAll(args []string, stdout, stderr io.Writer) error {
 	if err != nil {
 		return err
 	}
+	if _, _, err := sources.ParseSince(*since); err != nil {
+		return err
+	}
 	var out io.Writer = stdout
-	var file *os.File
+	var output *atomicOutput
+	defer func() { _ = output.abort() }()
 	if *dryRun {
 		out = io.Discard
 	} else if *outPath != "-" {
-		if err := os.MkdirAll(filepath.Dir(*outPath), 0o755); err != nil && filepath.Dir(*outPath) != "." {
-			return err
-		}
-		f, err := os.Create(*outPath)
+		output, err = createAtomicOutput(*outPath)
 		if err != nil {
 			return err
 		}
-		file = f
-		out = f
+		out = output.file
 	}
 	result := sources.Result{Warnings: []string{}, Files: []sources.FileScan{}}
 	for _, name := range selected {
@@ -198,15 +198,14 @@ func runAll(args []string, stdout, stderr io.Writer) error {
 			RedactHostnames: redactions["hostnames"],
 		}, out)
 		if err != nil {
-			result.Warnings = append(result.Warnings, fmt.Sprintf("%s: %s", name, err))
-			continue
+			return fmt.Errorf("%s: %w", name, err)
 		}
 		result.Records += partial.Records
 		result.Warnings = append(result.Warnings, prefixWarnings(name, partial.Warnings)...)
 		result.Files = append(result.Files, partial.Files...)
 	}
-	if file != nil {
-		if err := file.Close(); err != nil {
+	if output != nil {
+		if err := output.commit(); err != nil {
 			return err
 		}
 	}
@@ -222,18 +221,7 @@ func runAll(args []string, stdout, stderr io.Writer) error {
 		}
 	}
 	if *summaryOut != "" {
-		if err := os.MkdirAll(filepath.Dir(*summaryOut), 0o755); err != nil && filepath.Dir(*summaryOut) != "." {
-			return err
-		}
-		f, err := os.Create(*summaryOut)
-		if err != nil {
-			return err
-		}
-		if err := writeJSON(f, summary); err != nil {
-			_ = f.Close()
-			return err
-		}
-		if err := f.Close(); err != nil {
+		if err := writeAtomicJSON(*summaryOut, summary); err != nil {
 			return err
 		}
 	}
@@ -279,20 +267,16 @@ func runExport(def commandDef, args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 	var out io.Writer = stdout
-	var file *os.File
+	var output *atomicOutput
+	defer func() { _ = output.abort() }()
 	if *dryRun {
 		out = io.Discard
 	} else if *outPath != "-" {
-		if err := os.MkdirAll(filepath.Dir(*outPath), 0o755); err != nil && filepath.Dir(*outPath) != "." {
-			return err
-		}
-		f, err := os.Create(*outPath)
+		output, err = createAtomicOutput(*outPath)
 		if err != nil {
 			return err
 		}
-		defer f.Close()
-		file = f
-		out = f
+		out = output.file
 	}
 	result, err := def.generator(path, sources.Options{
 		Limit:           *limit,
@@ -306,8 +290,8 @@ func runExport(def commandDef, args []string, stdout, stderr io.Writer) error {
 	if err != nil {
 		return err
 	}
-	if file != nil {
-		if err := file.Close(); err != nil {
+	if output != nil {
+		if err := output.commit(); err != nil {
 			return err
 		}
 	}
@@ -323,18 +307,7 @@ func runExport(def commandDef, args []string, stdout, stderr io.Writer) error {
 	}
 	if *summaryOut != "" {
 		summary := exportSummary(def.name, path, exportTarget(*outPath, *dryRun), *dryRun, redactions, result)
-		if err := os.MkdirAll(filepath.Dir(*summaryOut), 0o755); err != nil && filepath.Dir(*summaryOut) != "." {
-			return err
-		}
-		f, err := os.Create(*summaryOut)
-		if err != nil {
-			return err
-		}
-		if err := writeJSON(f, summary); err != nil {
-			_ = f.Close()
-			return err
-		}
-		if err := f.Close(); err != nil {
+		if err := writeAtomicJSON(*summaryOut, summary); err != nil {
 			return err
 		}
 	}
@@ -351,6 +324,86 @@ func runExport(def commandDef, args []string, stdout, stderr io.Writer) error {
 		}
 	}
 	return nil
+}
+
+type atomicOutput struct {
+	file      *os.File
+	finalPath string
+	tempPath  string
+	closed    bool
+	committed bool
+}
+
+func createAtomicOutput(path string) (*atomicOutput, error) {
+	dir := filepath.Dir(path)
+	if dir != "." && dir != "" {
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			return nil, err
+		}
+	}
+	pattern := "." + filepath.Base(path) + ".tmp-*"
+	f, err := os.CreateTemp(dir, pattern)
+	if err != nil {
+		return nil, err
+	}
+	if err := f.Chmod(0o600); err != nil {
+		_ = f.Close()
+		_ = os.Remove(f.Name())
+		return nil, err
+	}
+	return &atomicOutput{file: f, finalPath: path, tempPath: f.Name()}, nil
+}
+
+func (o *atomicOutput) close() error {
+	if o == nil || o.closed {
+		return nil
+	}
+	err := o.file.Close()
+	o.closed = true
+	return err
+}
+
+func (o *atomicOutput) commit() error {
+	if o == nil {
+		return nil
+	}
+	if err := o.close(); err != nil {
+		_ = os.Remove(o.tempPath)
+		return err
+	}
+	if err := os.Rename(o.tempPath, o.finalPath); err != nil {
+		_ = os.Remove(o.tempPath)
+		return err
+	}
+	o.committed = true
+	return nil
+}
+
+func (o *atomicOutput) abort() error {
+	if o == nil || o.committed {
+		return nil
+	}
+	closeErr := o.close()
+	removeErr := os.Remove(o.tempPath)
+	if closeErr != nil {
+		return closeErr
+	}
+	if removeErr != nil && !errors.Is(removeErr, os.ErrNotExist) {
+		return removeErr
+	}
+	return nil
+}
+
+func writeAtomicJSON(path string, v any) error {
+	output, err := createAtomicOutput(path)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = output.abort() }()
+	if err := writeJSON(output.file, v); err != nil {
+		return err
+	}
+	return output.commit()
 }
 
 func exportSummary(source, path, outPath string, dryRun bool, redactions map[string]bool, result sources.Result) map[string]any {

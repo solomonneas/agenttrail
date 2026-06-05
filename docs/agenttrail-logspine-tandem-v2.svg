@@ -6,9 +6,10 @@
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
     </marker>
     <style>
-      .title { font: 700 28px Arial, sans-serif; fill: #0f172a; }
-      .label { font: 700 16px Arial, sans-serif; fill: #0f172a; }
-      .small { font: 13px Arial, sans-serif; fill: #334155; }
+      text { font-family: DejaVu Sans, Arial, Helvetica, sans-serif; font-style: normal; letter-spacing: 0; }
+      .title { font-weight: 700; font-size: 28px; fill: #0f172a; }
+      .label { font-weight: 700; font-size: 16px; fill: #0f172a; }
+      .small { font-weight: 400; font-size: 13px; fill: #334155; }
       .box { stroke: #334155; stroke-width: 2; rx: 10; }
       .input { fill: #e0f2fe; }
       .agenttrail { fill: #fef3c7; }
@@ -67,7 +68,7 @@
   <rect x="922" y="390" width="132" height="58" class="box logspine"/>
   <text x="988" y="424" text-anchor="middle" class="small">Evidence Bundles</text>
 
-  <rect x="338" y="454" width="490" height="58" class="box action"/>
+  <rect x="258" y="454" width="650" height="58" class="box action"/>
   <text x="583" y="488" text-anchor="middle" class="label">Boundary: AgentTrail exports, Logspine stores and analyzes.</text>
 
   <path d="M 248 199 L 338 199" class="line"/>
