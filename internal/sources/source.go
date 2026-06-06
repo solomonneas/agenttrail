@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openclaw/agenttrail/internal/adapter"
+	"github.com/escoffier-labs/stationtrail/internal/adapter"
 )
 
 type Options struct {

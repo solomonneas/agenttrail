@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1120" height="560" viewBox="0 0 1120 560" role="img" aria-labelledby="title desc">
-  <title id="title">How AgentTrail works</title>
-  <desc id="desc">Flowchart showing local session files entering AgentTrail, being scanned and normalized, then written as logspine adapter JSONL.</desc>
+  <title id="title">How StationTrail works</title>
+  <desc id="desc">Flowchart showing local session files entering StationTrail, being scanned and normalized, then written as logspine adapter JSONL.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
@@ -21,7 +21,7 @@
   </defs>
 
   <rect width="1120" height="560" fill="#ffffff"/>
-  <text x="48" y="52" class="title">How AgentTrail Works</text>
+  <text x="48" y="52" class="title">How StationTrail Works</text>
 
   <rect x="48" y="96" width="220" height="292" class="box source"/>
   <text x="158" y="128" text-anchor="middle" class="label">Local Inputs</text>
@@ -35,7 +35,7 @@
 
   <rect x="330" y="112" width="184" height="76" class="box process"/>
   <text x="422" y="144" text-anchor="middle" class="label">CLI Entry</text>
-  <text x="422" y="166" text-anchor="middle" class="small">cmd/agenttrail</text>
+  <text x="422" y="166" text-anchor="middle" class="small">cmd/stationtrail</text>
 
   <rect x="330" y="230" width="184" height="96" class="box process"/>
   <text x="422" y="264" text-anchor="middle" class="label">App Layer</text>

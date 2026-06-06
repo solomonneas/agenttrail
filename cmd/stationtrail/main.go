@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/openclaw/agenttrail/internal/app"
+	"github.com/escoffier-labs/stationtrail/internal/app"
 )
 
 func main() {

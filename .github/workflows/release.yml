@@ -24,7 +24,7 @@ jobs:
             goarch="${target#*/}"
             suffix=""
             if [ "$goos" = "windows" ]; then suffix=".exe"; fi
-            GOOS="$goos" GOARCH="$goarch" go build -o "dist/agenttrail-${goos}-${goarch}${suffix}" ./cmd/agenttrail
+            GOOS="$goos" GOARCH="$goarch" go build -o "dist/stationtrail-${goos}-${goarch}${suffix}" ./cmd/stationtrail
           done
           (cd dist && sha256sum * > checksums.txt)
       - name: Publish release
@@ -36,7 +36,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p verify
-          gh release download "$GITHUB_REF_NAME" --pattern agenttrail-linux-amd64 --pattern checksums.txt --dir verify
+          gh release download "$GITHUB_REF_NAME" --pattern stationtrail-linux-amd64 --pattern checksums.txt --dir verify
           (cd verify && sha256sum -c checksums.txt --ignore-missing)
-          chmod +x verify/agenttrail-linux-amd64
-          ./verify/agenttrail-linux-amd64 version
+          chmod +x verify/stationtrail-linux-amd64
+          ./verify/stationtrail-linux-amd64 version

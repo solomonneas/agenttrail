@@ -1,6 +1,6 @@
 bin/
 dist/
 *.adapter.jsonl
-docs/agenttrail-*.png
-docs/agenttrail-kitchen-card.svg
+docs/stationtrail-*.png
+docs/stationtrail-kitchen-card.svg
 .claude/memory-handoffs/

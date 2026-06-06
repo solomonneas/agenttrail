@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 
-repo="solomonneas/agenttrail"
-version="${AGENTTRAIL_VERSION:-latest}"
+repo="escoffier-labs/stationtrail"
+version="${STATIONTRAIL_VERSION:-latest}"
 bindir="${BINDIR:-$HOME/.local/bin}"
 
 os="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -18,7 +18,7 @@ case "$os" in
   *) echo "unsupported OS: $os" >&2; exit 1 ;;
 esac
 
-asset="agenttrail-${os}-${arch}"
+asset="stationtrail-${os}-${arch}"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
@@ -34,5 +34,5 @@ mkdir -p "$bindir"
 curl -fsSL "$url" -o "$tmp/$asset"
 curl -fsSL "$sums_url" -o "$tmp/checksums.txt"
 (cd "$tmp" && grep " ${asset}$" checksums.txt | sha256sum -c -)
-install -m 0755 "$tmp/$asset" "$bindir/agenttrail"
-"$bindir/agenttrail" version
+install -m 0755 "$tmp/$asset" "$bindir/stationtrail"
+"$bindir/stationtrail" version

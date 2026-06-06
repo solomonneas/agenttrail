@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/openclaw/agenttrail/internal/adapter"
-	"github.com/openclaw/agenttrail/internal/sources"
+	"github.com/escoffier-labs/stationtrail/internal/adapter"
+	"github.com/escoffier-labs/stationtrail/internal/sources"
 )
 
 func Generate(path string, opts sources.Options, w io.Writer) (sources.Result, error) {

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1120" height="560" viewBox="0 0 1120 560" role="img" aria-labelledby="title desc">
-  <title id="title">How AgentTrail works with Logspine</title>
-  <desc id="desc">Flowchart showing AgentTrail exporting adapter JSONL and Logspine importing, storing, indexing, searching, relating, and building evidence bundles.</desc>
+  <title id="title">How StationTrail works with Logspine</title>
+  <desc id="desc">Flowchart showing StationTrail exporting adapter JSONL and Logspine importing, storing, indexing, searching, relating, and building evidence bundles.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
@@ -12,7 +12,7 @@
       .small { font-weight: 400; font-size: 13px; fill: #334155; }
       .box { stroke: #334155; stroke-width: 2; rx: 10; }
       .input { fill: #e0f2fe; }
-      .agenttrail { fill: #fef3c7; }
+      .stationtrail { fill: #fef3c7; }
       .contract { fill: #dcfce7; }
       .logspine { fill: #ede9fe; }
       .action { fill: #ffe4e6; }
@@ -23,7 +23,7 @@
   </defs>
 
   <rect width="1120" height="560" fill="#ffffff"/>
-  <text x="48" y="52" class="title">AgentTrail in Tandem With Logspine</text>
+  <text x="48" y="52" class="title">StationTrail in Tandem With Logspine</text>
 
   <rect x="40" y="92" width="238" height="332" fill="none" class="boundary"/>
   <text x="159" y="124" text-anchor="middle" class="label">Local Machine</text>
@@ -36,12 +36,12 @@
   <text x="159" y="332" text-anchor="middle" class="label">Sanitized Export</text>
   <text x="159" y="354" text-anchor="middle" class="small">OpenCode JSON</text>
 
-  <rect x="338" y="144" width="220" height="110" class="box agenttrail"/>
-  <text x="448" y="180" text-anchor="middle" class="label">AgentTrail</text>
+  <rect x="338" y="144" width="220" height="110" class="box stationtrail"/>
+  <text x="448" y="180" text-anchor="middle" class="label">StationTrail</text>
   <text x="448" y="202" text-anchor="middle" class="small">source-specific parsing</text>
   <text x="448" y="222" text-anchor="middle" class="small">normalization and redaction</text>
 
-  <rect x="338" y="306" width="220" height="82" class="box agenttrail"/>
+  <rect x="338" y="306" width="220" height="82" class="box stationtrail"/>
   <text x="448" y="340" text-anchor="middle" class="label">Scan Summary</text>
   <text x="448" y="362" text-anchor="middle" class="small">counts, warnings, manifests</text>
 
@@ -69,7 +69,7 @@
   <text x="988" y="424" text-anchor="middle" class="small">Evidence Bundles</text>
 
   <rect x="258" y="454" width="650" height="58" class="box action"/>
-  <text x="583" y="488" text-anchor="middle" class="label">Boundary: AgentTrail exports, Logspine stores and analyzes.</text>
+  <text x="583" y="488" text-anchor="middle" class="label">Boundary: StationTrail exports, Logspine stores and analyzes.</text>
 
   <path d="M 248 199 L 338 199" class="line"/>
   <path d="M 248 339 L 338 226" class="line"/>

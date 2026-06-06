@@ -1,6 +1,6 @@
 # Adapter Contract
 
-AgentTrail emits `logspine.adapter.v1` JSONL.
+StationTrail emits `logspine.adapter.v1` JSONL.
 
 Each line is one JSON object. Required fields:
 
@@ -28,11 +28,11 @@ Example:
 {"schema":"logspine.adapter.v1","source":{"kind":"codex","name":"Codex Sessions"},"collection":{"external_id":"codex:session:demo","kind":"agent_session","name":"demo"},"item":{"external_id":"codex:demo-item","kind":"message","created_at":"2026-06-03T12:00:00Z","text":"example","tags":["agent-session","codex"]},"actor":{"external_id":"codex:human:human","type":"human","name":"human"},"artifacts":[],"links":[],"relations":[],"raw":{"format":"json","hash":"sha256:example","path":"session.jsonl","ordinal":1}}
 ```
 
-Identity should be deterministic. If a source lacks stable IDs, AgentTrail creates external IDs from path, session ID, ordinal, event type, timestamp, call ID when available, and content hash.
+Identity should be deterministic. If a source lacks stable IDs, StationTrail creates external IDs from path, session ID, ordinal, event type, timestamp, call ID when available, and content hash.
 
 ## Scanner Behavior
 
-AgentTrail scanners:
+StationTrail scanners:
 
 - Accept a file or directory.
 - Walk relevant `.jsonl` files recursively, plus source-specific JSON files such as Hermes `session_*.json` snapshots.
@@ -43,7 +43,7 @@ AgentTrail scanners:
 - Preserve useful non-secret source structure in `item.metadata`.
 - Emit empty arrays for `artifacts`, `links`, and `relations` when no values are present.
 
-`agenttrail all` exports Codex, Claude, OpenClaw, and Hermes default roots in one stream. OpenCode is explicit-only because session IDs and sanitized export files are user-selected inputs.
+`stationtrail all` exports Codex, Claude, OpenClaw, and Hermes default roots in one stream. OpenCode is explicit-only because session IDs and sanitized export files are user-selected inputs.
 
 `--dry-run --json` reports scan counts and warnings without writing adapter records. `discover`, `doctor`, and `doctor --live` report source roots, counts, file manifests, and warnings only, not transcript content.
 
@@ -55,7 +55,7 @@ OpenCode support consumes sanitized export JSON from:
 opencode export <sessionID> --sanitize
 ```
 
-AgentTrail can also run the local export command when passed an OpenCode session ID. It does not parse OpenCode's private SQLite database directly.
+StationTrail can also run the local export command when passed an OpenCode session ID. It does not parse OpenCode's private SQLite database directly.
 
 Hermes support consumes:
 

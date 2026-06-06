@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openclaw/agenttrail/internal/adapter"
-	"github.com/openclaw/agenttrail/internal/sources"
+	"github.com/escoffier-labs/stationtrail/internal/adapter"
+	"github.com/escoffier-labs/stationtrail/internal/sources"
 )
 
 const opencodeExportTimeout = 2 * time.Minute

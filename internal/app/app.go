@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openclaw/agenttrail/internal/sources"
-	"github.com/openclaw/agenttrail/internal/sources/claude"
-	"github.com/openclaw/agenttrail/internal/sources/codex"
-	"github.com/openclaw/agenttrail/internal/sources/hermes"
-	"github.com/openclaw/agenttrail/internal/sources/openclaw"
-	"github.com/openclaw/agenttrail/internal/sources/opencode"
+	"github.com/escoffier-labs/stationtrail/internal/sources"
+	"github.com/escoffier-labs/stationtrail/internal/sources/claude"
+	"github.com/escoffier-labs/stationtrail/internal/sources/codex"
+	"github.com/escoffier-labs/stationtrail/internal/sources/hermes"
+	"github.com/escoffier-labs/stationtrail/internal/sources/openclaw"
+	"github.com/escoffier-labs/stationtrail/internal/sources/opencode"
 )
 
 const Version = "0.1.4"
@@ -72,7 +72,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	}
 	switch args[0] {
 	case "version":
-		fmt.Fprintf(stdout, "agenttrail %s\n", Version)
+		fmt.Fprintf(stdout, "stationtrail %s\n", Version)
 		return 0
 	case "all":
 		if err := runAll(args[1:], stdout, stderr); err != nil {
@@ -113,19 +113,19 @@ func Run(args []string, stdout, stderr io.Writer) int {
 }
 
 func printHelp(w io.Writer) {
-	fmt.Fprintln(w, "agenttrail exports local agent session logs to logspine.adapter.v1 JSONL.")
+	fmt.Fprintln(w, "stationtrail exports local agent session logs to logspine.adapter.v1 JSONL.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Usage:")
-	fmt.Fprintln(w, "  agenttrail all --out <file|-> [--sources codex,claude,openclaw,hermes] [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
-	fmt.Fprintln(w, "  agenttrail discover [--json]")
-	fmt.Fprintln(w, "  agenttrail doctor [--json] [--live]")
-	fmt.Fprintln(w, "  agenttrail inspect <source> <path> [--json]")
-	fmt.Fprintln(w, "  agenttrail codex [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
-	fmt.Fprintln(w, "  agenttrail claude [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
-	fmt.Fprintln(w, "  agenttrail openclaw [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
-	fmt.Fprintln(w, "  agenttrail opencode <export-json|dir|session-id> --out <file|-> [--limit N] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
-	fmt.Fprintln(w, "  agenttrail hermes [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
-	fmt.Fprintln(w, "  agenttrail version")
+	fmt.Fprintln(w, "  stationtrail all --out <file|-> [--sources codex,claude,openclaw,hermes] [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  stationtrail discover [--json]")
+	fmt.Fprintln(w, "  stationtrail doctor [--json] [--live]")
+	fmt.Fprintln(w, "  stationtrail inspect <source> <path> [--json]")
+	fmt.Fprintln(w, "  stationtrail codex [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  stationtrail claude [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  stationtrail openclaw [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  stationtrail opencode <export-json|dir|session-id> --out <file|-> [--limit N] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  stationtrail hermes [path-or-dir] --out <file|-> [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")
+	fmt.Fprintln(w, "  stationtrail version")
 }
 
 func runAll(args []string, stdout, stderr io.Writer) error {
@@ -143,7 +143,7 @@ func runAll(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 	if len(fs.Args()) != 0 {
-		return errors.New("usage: agenttrail all --out <file|-> [--sources LIST]")
+		return errors.New("usage: stationtrail all --out <file|-> [--sources LIST]")
 	}
 	redactions, err := parseRedactions(*redact)
 	if err != nil {
@@ -629,7 +629,7 @@ func runInspect(args []string, stdout io.Writer) error {
 		}
 	}
 	if len(rest) != 2 {
-		return errors.New("usage: agenttrail inspect <source> <path> [--json]")
+		return errors.New("usage: stationtrail inspect <source> <path> [--json]")
 	}
 	report, err := Inspect(rest[0], rest[1])
 	if err != nil {

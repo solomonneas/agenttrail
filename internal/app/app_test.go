@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/openclaw/agenttrail/internal/adapter"
-	"github.com/openclaw/agenttrail/internal/sources"
+	"github.com/escoffier-labs/stationtrail/internal/adapter"
+	"github.com/escoffier-labs/stationtrail/internal/sources"
 )
 
 func TestExportCommandsEmitValidAdapterRecords(t *testing.T) {
