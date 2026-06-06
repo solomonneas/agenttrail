@@ -18,9 +18,53 @@ AgentTrail should not absorb crawler adapters or general local note/file harvest
 
 ## How It Works
 
-![AgentTrail flow](docs/agenttrail-how-it-works-v2.svg)
+```mermaid
+flowchart TB
+    CLI["<b>agenttrail CLI</b><br/><i>local scanner and exporter</i>"]
+    APP["<b>App layer</b><br/>commands &middot; flags &middot; summaries"]
 
-Editable Excalidraw source: [docs/agenttrail-flowcharts.excalidraw](docs/agenttrail-flowcharts.excalidraw)
+    subgraph INPUTS [" local inputs "]
+        CODEX["<b>Codex</b><br/>session JSONL"]
+        CLAUDE["<b>Claude</b><br/>project JSONL"]
+        OPENCLAW["<b>OpenClaw</b><br/>sessions &middot; trajectories"]
+        HERMES["<b>Hermes</b><br/>snapshots &middot; trajectories"]
+        OPENCODE["<b>OpenCode</b><br/>sanitized export JSON"]
+    end
+
+    CODEX & CLAUDE & OPENCLAW & HERMES & OPENCODE --> CLI --> APP
+
+    subgraph PIPELINE [" scan and normalize "]
+        SCAN["<b>Source scanners</b><br/>walk files &middot; parse JSONL/JSON"]
+        NORMALIZE["<b>Normalize records</b><br/>messages &middot; tools &middot; artifacts &middot; relations"]
+        FILTER["<b>Apply controls</b><br/>since &middot; limit &middot; redaction"]
+    end
+
+    APP --> SCAN --> NORMALIZE --> FILTER
+
+    subgraph OUTPUTS [" local outputs "]
+        ADAPTER["<b>Adapter JSONL</b><br/>logspine.adapter.v1 &middot; one object per line"]
+        SUMMARY["<b>Diagnostics</b><br/>discover &middot; doctor &middot; inspect &middot; dry-run"]
+    end
+
+    FILTER --> ADAPTER
+    APP --> SUMMARY
+
+    GUARD["<b>Privacy boundary</b><br/>counts and manifests do not print generated text; exported text is untrusted evidence"]
+    CLI -. local only .-> GUARD
+    FILTER -. enforces .-> GUARD
+    SUMMARY -. reports structure only .-> GUARD
+
+    classDef source fill:#eff6ff,stroke:#2563eb,color:#1e3a8a;
+    classDef process fill:#ecfdf5,stroke:#059669,color:#064e3b;
+    classDef stream fill:#fff7ed,stroke:#ea580c,color:#7c2d12;
+    classDef guard fill:#fee2e2,stroke:#ef4444,color:#7f1d1d;
+    classDef local fill:#f8fafc,stroke:#64748b,color:#334155;
+    class CLI,APP local;
+    class CODEX,CLAUDE,OPENCLAW,HERMES,OPENCODE source;
+    class SCAN,NORMALIZE,FILTER process;
+    class ADAPTER,SUMMARY stream;
+    class GUARD guard;
+```
 
 AgentTrail follows the same path for each source:
 
@@ -33,7 +77,46 @@ AgentTrail follows the same path for each source:
 
 ## With Logspine
 
-![AgentTrail and Logspine flow](docs/agenttrail-logspine-tandem-v2.svg)
+```mermaid
+flowchart LR
+    subgraph LOCAL [" local machine "]
+        FILES["<b>Session files</b><br/>JSONL and JSON"]
+        EXPORT["<b>Sanitized export</b><br/>OpenCode JSON"]
+    end
+
+    AGENTTRAIL["<b>AgentTrail</b><br/>source parsing &middot; normalization &middot; redaction"]
+    SUMMARY["<b>Scan summary</b><br/>counts &middot; warnings &middot; manifests"]
+    ADAPTER["<b>Adapter JSONL</b><br/>logspine.adapter.v1"]
+    IMPORT["<b>Import options</b><br/>pipe or wrapper command"]
+
+    FILES & EXPORT --> AGENTTRAIL
+    AGENTTRAIL --> ADAPTER --> IMPORT
+    AGENTTRAIL --> SUMMARY
+
+    subgraph LOGSPINE [" Logspine evidence layer "]
+        ARCHIVE["<b>Archive</b><br/>durable records"]
+        INDEX["<b>Index and search</b><br/>queryable evidence"]
+        RELATIONS["<b>Relations</b><br/>linked sessions and artifacts"]
+        BUNDLES["<b>Evidence bundles</b><br/>review-ready exports"]
+    end
+
+    IMPORT --> ARCHIVE --> INDEX --> RELATIONS --> BUNDLES
+
+    BOUNDARY["<b>Boundary</b><br/>AgentTrail exports; Logspine stores and analyzes"]
+    AGENTTRAIL -. adapter only .-> BOUNDARY
+    ARCHIVE -. owns durable evidence .-> BOUNDARY
+
+    classDef source fill:#eff6ff,stroke:#2563eb,color:#1e3a8a;
+    classDef process fill:#ecfdf5,stroke:#059669,color:#064e3b;
+    classDef stream fill:#fff7ed,stroke:#ea580c,color:#7c2d12;
+    classDef sink fill:#f8fafc,stroke:#64748b,color:#334155;
+    classDef guard fill:#fee2e2,stroke:#ef4444,color:#7f1d1d;
+    class FILES,EXPORT source;
+    class AGENTTRAIL process;
+    class ADAPTER,IMPORT,SUMMARY stream;
+    class ARCHIVE,INDEX,RELATIONS,BUNDLES sink;
+    class BOUNDARY guard;
+```
 
 AgentTrail is the source-specific adapter layer. Logspine is the durable evidence layer.
 
