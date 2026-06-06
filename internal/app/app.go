@@ -113,7 +113,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 }
 
 func printHelp(w io.Writer) {
-	fmt.Fprintln(w, "stationtrail exports local agent session logs to logspine.adapter.v1 JSONL.")
+	fmt.Fprintln(w, "stationtrail exports local agent session logs to miseledger.adapter.v1 JSONL.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Usage:")
 	fmt.Fprintln(w, "  stationtrail all --out <file|-> [--sources codex,claude,openclaw,hermes] [--limit N] [--since DATE] [--dry-run] [--redact safe|none|paths,secrets,emails,urls,hostnames,all] [--json]")

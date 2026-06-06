@@ -1,10 +1,10 @@
 # Adapter Contract
 
-StationTrail emits `logspine.adapter.v1` JSONL.
+StationTrail emits `miseledger.adapter.v1` JSONL.
 
 Each line is one JSON object. Required fields:
 
-- `schema`: `logspine.adapter.v1`
+- `schema`: `miseledger.adapter.v1`
 - `source.kind`
 - `collection.external_id`
 - `collection.kind`
@@ -25,7 +25,7 @@ Recommended fields:
 Example:
 
 ```json
-{"schema":"logspine.adapter.v1","source":{"kind":"codex","name":"Codex Sessions"},"collection":{"external_id":"codex:session:demo","kind":"agent_session","name":"demo"},"item":{"external_id":"codex:demo-item","kind":"message","created_at":"2026-06-03T12:00:00Z","text":"example","tags":["agent-session","codex"]},"actor":{"external_id":"codex:human:human","type":"human","name":"human"},"artifacts":[],"links":[],"relations":[],"raw":{"format":"json","hash":"sha256:example","path":"session.jsonl","ordinal":1}}
+{"schema":"miseledger.adapter.v1","source":{"kind":"codex","name":"Codex Sessions"},"collection":{"external_id":"codex:session:demo","kind":"agent_session","name":"demo"},"item":{"external_id":"codex:demo-item","kind":"message","created_at":"2026-06-03T12:00:00Z","text":"example","tags":["agent-session","codex"]},"actor":{"external_id":"codex:human:human","type":"human","name":"human"},"artifacts":[],"links":[],"relations":[],"raw":{"format":"json","hash":"sha256:example","path":"session.jsonl","ordinal":1}}
 ```
 
 Identity should be deterministic. If a source lacks stable IDs, StationTrail creates external IDs from path, session ID, ordinal, event type, timestamp, call ID when available, and content hash.

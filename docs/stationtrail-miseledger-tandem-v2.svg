@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1120" height="560" viewBox="0 0 1120 560" role="img" aria-labelledby="title desc">
-  <title id="title">How StationTrail works with Logspine</title>
-  <desc id="desc">Flowchart showing StationTrail exporting adapter JSONL and Logspine importing, storing, indexing, searching, relating, and building evidence bundles.</desc>
+  <title id="title">How StationTrail works with MiseLedger</title>
+  <desc id="desc">Flowchart showing StationTrail exporting adapter JSONL and MiseLedger importing, storing, indexing, searching, relating, and building evidence bundles.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
@@ -14,7 +14,7 @@
       .input { fill: #e0f2fe; }
       .stationtrail { fill: #fef3c7; }
       .contract { fill: #dcfce7; }
-      .logspine { fill: #ede9fe; }
+      .miseledger { fill: #ede9fe; }
       .action { fill: #ffe4e6; }
       .line { stroke: #334155; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
       .dash { stroke: #64748b; stroke-width: 2; stroke-dasharray: 6 6; fill: none; marker-end: url(#arrow); }
@@ -23,7 +23,7 @@
   </defs>
 
   <rect width="1120" height="560" fill="#ffffff"/>
-  <text x="48" y="52" class="title">StationTrail in Tandem With Logspine</text>
+  <text x="48" y="52" class="title">StationTrail in Tandem With MiseLedger</text>
 
   <rect x="40" y="92" width="238" height="332" fill="none" class="boundary"/>
   <text x="159" y="124" text-anchor="middle" class="label">Local Machine</text>
@@ -47,29 +47,29 @@
 
   <rect x="626" y="162" width="202" height="82" class="box contract"/>
   <text x="727" y="196" text-anchor="middle" class="label">Adapter JSONL</text>
-  <text x="727" y="218" text-anchor="middle" class="small">logspine.adapter.v1</text>
+  <text x="727" y="218" text-anchor="middle" class="small">miseledger.adapter.v1</text>
 
   <rect x="626" y="318" width="202" height="82" class="box contract"/>
   <text x="727" y="352" text-anchor="middle" class="label">Import Options</text>
   <text x="727" y="374" text-anchor="middle" class="small">pipe or wrapper command</text>
 
   <rect x="896" y="98" width="184" height="316" fill="none" class="boundary"/>
-  <text x="988" y="130" text-anchor="middle" class="label">Logspine</text>
+  <text x="988" y="130" text-anchor="middle" class="label">MiseLedger</text>
 
-  <rect x="922" y="162" width="132" height="58" class="box logspine"/>
+  <rect x="922" y="162" width="132" height="58" class="box miseledger"/>
   <text x="988" y="196" text-anchor="middle" class="small">Archive</text>
 
-  <rect x="922" y="238" width="132" height="58" class="box logspine"/>
+  <rect x="922" y="238" width="132" height="58" class="box miseledger"/>
   <text x="988" y="272" text-anchor="middle" class="small">Index and Search</text>
 
-  <rect x="922" y="314" width="132" height="58" class="box logspine"/>
+  <rect x="922" y="314" width="132" height="58" class="box miseledger"/>
   <text x="988" y="348" text-anchor="middle" class="small">Relations</text>
 
-  <rect x="922" y="390" width="132" height="58" class="box logspine"/>
+  <rect x="922" y="390" width="132" height="58" class="box miseledger"/>
   <text x="988" y="424" text-anchor="middle" class="small">Evidence Bundles</text>
 
   <rect x="258" y="454" width="650" height="58" class="box action"/>
-  <text x="583" y="488" text-anchor="middle" class="label">Boundary: StationTrail exports, Logspine stores and analyzes.</text>
+  <text x="583" y="488" text-anchor="middle" class="label">Boundary: StationTrail exports, MiseLedger stores and analyzes.</text>
 
   <path d="M 248 199 L 338 199" class="line"/>
   <path d="M 248 339 L 338 226" class="line"/>

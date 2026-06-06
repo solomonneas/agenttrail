@@ -705,7 +705,7 @@
       "endArrowhead": "arrow"
     },
     {
-      "id": "title-logspine",
+      "id": "title-miseledger",
       "type": "text",
       "x": 40,
       "y": 475,
@@ -730,13 +730,13 @@
       "updated": 1,
       "link": null,
       "locked": false,
-      "text": "StationTrail in Tandem With Logspine",
+      "text": "StationTrail in Tandem With MiseLedger",
       "fontSize": 28,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
       "containerId": null,
-      "originalText": "StationTrail in Tandem With Logspine",
+      "originalText": "StationTrail in Tandem With MiseLedger",
       "lineHeight": 1.25,
       "baseline": 25
     },
@@ -936,7 +936,7 @@
       "baseline": 34
     },
     {
-      "id": "logspine-box",
+      "id": "miseledger-box",
       "type": "rectangle",
       "x": 898,
       "y": 550,
@@ -965,7 +965,7 @@
       "locked": false
     },
     {
-      "id": "logspine-text",
+      "id": "miseledger-text",
       "type": "text",
       "x": 929,
       "y": 586,
@@ -990,13 +990,13 @@
       "updated": 1,
       "link": null,
       "locked": false,
-      "text": "Logspine\narchive\nindex and search\nrelations\nbundles",
+      "text": "MiseLedger\narchive\nindex and search\nrelations\nbundles",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
       "containerId": null,
-      "originalText": "Logspine\narchive\nindex and search\nrelations\nbundles",
+      "originalText": "MiseLedger\narchive\nindex and search\nrelations\nbundles",
       "lineHeight": 1.25,
       "baseline": 69
     },

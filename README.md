@@ -1,8 +1,8 @@
 # StationTrail
 
-StationTrail exports local agent session logs to `logspine.adapter.v1` JSONL.
+StationTrail exports local agent session logs to `miseledger.adapter.v1` JSONL.
 
-It is a scanner and exporter, not an archive. StationTrail reads local session files, normalizes them into portable adapter records, and writes JSONL to a file or stdout. Logspine owns storage, indexing, dedupe, search, relations, and evidence bundles.
+It is a scanner and exporter, not an archive. StationTrail reads local session files, normalizes them into portable adapter records, and writes JSONL to a file or stdout. MiseLedger owns storage, indexing, dedupe, search, relations, and evidence bundles.
 
 StationTrail makes no network calls.
 
@@ -12,7 +12,7 @@ StationTrail is one part of the local evidence stack:
 
 - StationTrail handles local agent-session harnesses such as Codex, Claude, OpenClaw, OpenCode, and Hermes.
 - [SourceHarvest](https://github.com/escoffier-labs/sourceharvest) handles non-harness local source exports such as notes, generic files, crawler exports, and issue exports.
-- [Logspine](https://github.com/escoffier-labs/logspine) imports the shared adapter contract, archives it, indexes it, searches it, and emits evidence bundles.
+- [MiseLedger](https://github.com/escoffier-labs/miseledger) imports the shared adapter contract, archives it, indexes it, searches it, and emits evidence bundles.
 
 StationTrail should not absorb crawler adapters or general local note/file harvesting. Those belong in SourceHarvest.
 
@@ -42,7 +42,7 @@ flowchart TB
     APP --> SCAN --> NORMALIZE --> FILTER
 
     subgraph OUTPUTS [" local outputs "]
-        ADAPTER["<b>Adapter JSONL</b><br/>logspine.adapter.v1 &middot; one object per line"]
+        ADAPTER["<b>Adapter JSONL</b><br/>miseledger.adapter.v1 &middot; one object per line"]
         SUMMARY["<b>Diagnostics</b><br/>discover &middot; doctor &middot; inspect &middot; dry-run"]
     end
 
@@ -72,10 +72,10 @@ StationTrail follows the same path for each source:
 2. Walk supported JSONL or JSON files for that source.
 3. Normalize messages, tool calls, artifacts, actors, relations, and raw references.
 4. Apply `--since`, `--limit`, and requested redactions.
-5. Emit one `logspine.adapter.v1` JSON object per line.
+5. Emit one `miseledger.adapter.v1` JSON object per line.
 6. Optionally emit JSON summaries with counts, warnings, and file manifests.
 
-## With Logspine
+## With MiseLedger
 
 ```mermaid
 flowchart LR
@@ -86,14 +86,14 @@ flowchart LR
 
     STATIONTRAIL["<b>StationTrail</b><br/>source parsing &middot; normalization &middot; redaction"]
     SUMMARY["<b>Scan summary</b><br/>counts &middot; warnings &middot; manifests"]
-    ADAPTER["<b>Adapter JSONL</b><br/>logspine.adapter.v1"]
+    ADAPTER["<b>Adapter JSONL</b><br/>miseledger.adapter.v1"]
     IMPORT["<b>Import options</b><br/>pipe or wrapper command"]
 
     FILES & EXPORT --> STATIONTRAIL
     STATIONTRAIL --> ADAPTER --> IMPORT
     STATIONTRAIL --> SUMMARY
 
-    subgraph LOGSPINE [" Logspine evidence layer "]
+    subgraph MISELEDGER [" MiseLedger evidence layer "]
         ARCHIVE["<b>Archive</b><br/>durable records"]
         INDEX["<b>Index and search</b><br/>queryable evidence"]
         RELATIONS["<b>Relations</b><br/>linked sessions and artifacts"]
@@ -102,7 +102,7 @@ flowchart LR
 
     IMPORT --> ARCHIVE --> INDEX --> RELATIONS --> BUNDLES
 
-    BOUNDARY["<b>Boundary</b><br/>StationTrail exports; Logspine stores and analyzes"]
+    BOUNDARY["<b>Boundary</b><br/>StationTrail exports; MiseLedger stores and analyzes"]
     STATIONTRAIL -. adapter only .-> BOUNDARY
     ARCHIVE -. owns durable evidence .-> BOUNDARY
 
@@ -118,22 +118,22 @@ flowchart LR
     class BOUNDARY guard;
 ```
 
-StationTrail is the source-specific adapter layer. Logspine is the durable evidence layer.
+StationTrail is the source-specific adapter layer. MiseLedger is the durable evidence layer.
 
 ```bash
-stationtrail all --out - --redact safe | spine import adapter -
-stationtrail codex ~/.codex/sessions --out - | spine import adapter -
+stationtrail all --out - --redact safe | miseledger import adapter -
+stationtrail codex ~/.codex/sessions --out - | miseledger import adapter -
 ```
 
-When `stationtrail` is installed on `PATH`, Logspine can also run it through its wrapper:
+When `stationtrail` is installed on `PATH`, MiseLedger can also run it through its wrapper:
 
 ```bash
-spine import stationtrail codex ~/.codex/sessions --json
-spine import stationtrail opencode ./opencode-session.json --json
-spine import stationtrail hermes ~/.hermes/sessions --json
+miseledger import stationtrail codex ~/.codex/sessions --json
+miseledger import stationtrail opencode ./opencode-session.json --json
+miseledger import stationtrail hermes ~/.hermes/sessions --json
 ```
 
-For mixed-source imports, prefer the pipe form with `stationtrail all`. Adapter records preserve their own `source.kind`, while Logspine keeps archive and search behavior centralized.
+For mixed-source imports, prefer the pipe form with `stationtrail all`. Adapter records preserve their own `source.kind`, while MiseLedger keeps archive and search behavior centralized.
 
 ## Supported Sources
 
@@ -250,7 +250,7 @@ Export commands preserve raw references with path, hash, and ordinal, but keep s
 
 ## Output Contract
 
-Each output line is one `logspine.adapter.v1` JSON object with:
+Each output line is one `miseledger.adapter.v1` JSON object with:
 
 - `source.kind`
 - `collection.external_id`
@@ -263,9 +263,9 @@ Each output line is one `logspine.adapter.v1` JSON object with:
 See [docs/ADAPTER_CONTRACT.md](docs/ADAPTER_CONTRACT.md) for the contract shape.
 See [docs/OPENCODE.md](docs/OPENCODE.md) for the OpenCode sanitized export workflow.
 See [docs/HERMES.md](docs/HERMES.md) for Hermes source details.
-See [docs/LOGSPINE_INTEGRATION.md](docs/LOGSPINE_INTEGRATION.md) for Logspine integration.
+See [docs/MISELEDGER_INTEGRATION.md](docs/MISELEDGER_INTEGRATION.md) for MiseLedger integration.
 See [docs/RECORD_EXAMPLES.md](docs/RECORD_EXAMPLES.md) for one canonical record example per source.
 
 ## Project Boundary
 
-StationTrail stays focused on exporting local agent session logs to adapter JSONL. Archive storage, SQLite, search, evidence bundles, GUI, and server behavior belong in Logspine.
+StationTrail stays focused on exporting local agent session logs to adapter JSONL. Archive storage, SQLite, search, evidence bundles, GUI, and server behavior belong in MiseLedger.

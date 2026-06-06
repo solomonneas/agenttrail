@@ -15,12 +15,12 @@ StationTrail can also run the export command when passed a session ID:
 stationtrail opencode <session-id> --out -
 ```
 
-For Logspine:
+For MiseLedger:
 
 ```bash
 opencode export <session-id> --sanitize > opencode-session.json
-stationtrail opencode opencode-session.json --out - | spine import adapter -
-spine import stationtrail opencode opencode-session.json --json
+stationtrail opencode opencode-session.json --out - | miseledger import adapter -
+miseledger import stationtrail opencode opencode-session.json --json
 ```
 
 Privacy notes:
