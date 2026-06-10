@@ -1,5 +1,13 @@
 # StationTrail
 
+<p>
+  <a href="https://github.com/escoffier-labs/stationtrail/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/escoffier-labs/stationtrail/ci.yml?branch=master&style=for-the-badge&label=ci" alt="CI status"></a>
+  <a href="https://github.com/escoffier-labs/stationtrail/releases"><img src="https://img.shields.io/github/v/release/escoffier-labs/stationtrail?style=for-the-badge&label=release" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/go-1.22%2B-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go 1.22+">
+  <img src="https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-334155?style=for-the-badge" alt="Platform: Linux, macOS, Windows">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="MIT license"></a>
+</p>
+
 StationTrail exports local agent session logs to `miseledger.adapter.v1` JSONL.
 
 It is a scanner and exporter, not an archive. StationTrail reads local session files, normalizes them into portable adapter records, and writes JSONL to a file or stdout. MiseLedger owns storage, indexing, dedupe, search, relations, and evidence bundles.
@@ -265,6 +273,7 @@ See [docs/OPENCODE.md](docs/OPENCODE.md) for the OpenCode sanitized export workf
 See [docs/HERMES.md](docs/HERMES.md) for Hermes source details.
 See [docs/MISELEDGER_INTEGRATION.md](docs/MISELEDGER_INTEGRATION.md) for MiseLedger integration.
 See [docs/RECORD_EXAMPLES.md](docs/RECORD_EXAMPLES.md) for one canonical record example per source.
+See [docs/ROADMAP.md](docs/ROADMAP.md) for what is usable now, what is planned, and the OpenCode adapter's current maturity.
 
 ## Project Boundary
 
